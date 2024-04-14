@@ -6,7 +6,7 @@ from lidar import Lidar
 import json
 from tornado.ioloop import IOLoop, PeriodicCallback
 
-IP = "10.53.1.73"
+IP = "10.53.11.85"
 PORT = 8080
 header = { 
         'websocketpass':'1234', 
@@ -17,7 +17,7 @@ ioloop = IOLoop.instance()
 if __name__ == "__main__":
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
-    fileHandler = logging.FileHandler('application.log')
+    fileHandler = logging.FileHandler('/home/AGV/python.log')
     fileHandler.setLevel(logging.DEBUG)
     fileHandler.setFormatter(logFormatter)
     #consoleHandler for Logging
