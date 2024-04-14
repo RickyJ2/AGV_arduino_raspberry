@@ -46,12 +46,13 @@ class Kompas{
       devStatus = compass.dmpInitialize();
 
       //Change with sensor's offset value
-      compass.setXGyroOffset(-500);
-      compass.setYGyroOffset(-500);
-      compass.setZGyroOffset(-500);
-      compass.setXAccelOffset(-3000);
-      compass.setYAccelOffset(-1000);
-      compass.setZAccelOffset(1000);
+      //id 01 [-2275,-2274] --> [-12,5]  [-787,-786] --> [-6,12] [1091,1092] --> [16368,16386] [-233,-232] --> [-2,1]  [-211,-210] --> [0,2] [-53,-52] --> [0,3]
+      compass.setXGyroOffset(-2274);
+      compass.setYGyroOffset(-787);
+      compass.setZGyroOffset(1091);
+      compass.setXAccelOffset(-232);
+      compass.setYAccelOffset(-211);
+      compass.setZAccelOffset(-53);
       
       if (devStatus == 0) {
         compass.CalibrateAccel(6);

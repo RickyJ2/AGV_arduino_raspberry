@@ -12,8 +12,8 @@ Proximity container(5);
 LimitSwitch uppperBumper(12);
 LimitSwitch bellowBumper(13);
 Kompas imu(4); 
-VoltageReader powerbank(A3, 7, 8.3);
-VoltageReader battery(A2, 6, 7.7);
+VoltageReader powerbank(A2, 7.5, 8.3);
+VoltageReader battery(A3, 6, 7.7);
 PIDController pid(2,5,1);
 //AGV State
 float targetAngle = 0;
@@ -42,15 +42,15 @@ void loop() {
   battery.updateState();
   //Send to raspberry
   JsonDocument data;
-  data["container"] = container.getState();
-  data["collision"] = uppperBumper.getState() || bellowBumper.getState();
+//  data["container"] = container.getState();
+//  data["collision"] = uppperBumper.getState() || bellowBumper.getState();
   vec3_t acceleration = imu.getAcceleration();
-  data["orientation"] = imu.getOrientation();
-  data["acceleration"]["x"] = acceleration.x;
-  data["acceleration"]["y"] = acceleration.y;
-  data["acceleration"]["z"] = acceleration.z;
-  data["powerbank"] = powerbank.getState();
-  data["baterai"] = battery.getState();
+//  data["orientation"] = imu.getOrientation();
+//  data["acceleration"]["x"] = acceleration.x;
+//  data["acceleration"]["y"] = acceleration.y;
+//  data["acceleration"]["z"] = acceleration.z;
+  data["powerbank"] = powerbank.getPercent();
+  data["baterai"] = battery.getPercent();
   
   // if(powerbank.getState() <= battery.getState()){
   //   data["power"] = powerbank.getState();
@@ -61,37 +61,30 @@ void loop() {
   Serial.println();
 
   if(Serial.available() > 0){
-    JsonDocument input;
-    deserializeJson(input, Serial);
-    String cmd = input["cmd"];
+//    JsonDocument input;
+//    deserializeJson(input, Serial);
+//    String cmd = input["cmd"];
+    String cmd = Serial.readStringUntil('\n');
     //Collission Routine
-    if(uppperBumper.getState() || bellowBumper.getState()){
-      motor.stop();
-    }else 
     if(cmd == "forward"){
-      motor.forward();
       isDriving = true;
       direction = true;
     }else if(cmd == "backward"){
-      motor.backward();
       isDriving = true;
       direction = false;
-    }else if(cmd == "left"){
-      motor.turnLeft();
+    }else if(cmd == "right"){
       targetAngle += 90;
       if (targetAngle > 180){
         targetAngle -= 360;
       }
       isDriving = false;
-    }else if(cmd == "right"){
-      motor.turnRight();
+    }else if(cmd == "left"){
       targetAngle -= 90;
       if (targetAngle <= -180){
         targetAngle += 360;
       }
       isDriving = false;
     }else if(cmd == "stop"){
-      motor.stop();
       isDriving = false;
     }
   }
@@ -100,4 +93,17 @@ void loop() {
   double controlSignal = pid.compute(imu.getOrientation(), targetAngle);
   motor.setLeftSpeed(motor.getLeftSpeed() - controlSignal);
   motor.setRightSpeed(motor.getRightSpeed() + controlSignal);
+  if(uppperBumper.getState() || bellowBumper.getState()){
+    motor.stop();
+  }else 
+  if(isDriving){
+    if(direction){
+      motor.forward();
+    }else{
+      motor.backward();
+    }
+    
+  }else{
+    motor.stop();
+  }
 }
