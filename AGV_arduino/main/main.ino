@@ -12,8 +12,8 @@ Proximity container(5);
 LimitSwitch uppperBumper(12);
 LimitSwitch bellowBumper(13);
 Kompas imu(4); 
-VoltageReader powerbank(A3, 4.8, 5.2);
-VoltageReader battery(A2, 5, 7.7);
+VoltageReader powerbank(A3, 7, 8.3);
+VoltageReader battery(A2, 6, 7.7);
 PIDController pid(2,5,1);
 //AGV State
 float targetAngle = 0;
@@ -65,9 +65,9 @@ void loop() {
     deserializeJson(input, Serial);
     String cmd = input["cmd"];
     //Collission Routine
-    // if(uppperBumper.getState() || bellowBumper.getState()){
-    //   motor.stop();
-    // }else 
+    if(uppperBumper.getState() || bellowBumper.getState()){
+      motor.stop();
+    }else 
     if(cmd == "forward"){
       motor.forward();
       isDriving = true;
@@ -95,4 +95,9 @@ void loop() {
       isDriving = false;
     }
   }
+
+  //PID Control for orientation
+  double controlSignal = pid.compute(imu.getOrientation(), targetAngle);
+  motor.setLeftSpeed(motor.getLeftSpeed() - controlSignal);
+  motor.setRightSpeed(motor.getRightSpeed() + controlSignal);
 }

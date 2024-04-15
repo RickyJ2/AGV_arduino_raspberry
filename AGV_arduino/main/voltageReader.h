@@ -4,7 +4,7 @@
 
 /*
   GND_Battery
-      |---<10K Ohm>- A0 -<10K Ohm>- (+)Battery          
+      |---<10K Ohm>- Analog Pin -<10K Ohm>- (+)Battery          
   GND_Arduino 
 */
 
@@ -41,10 +41,6 @@ class VoltageReader {
     }
 
     int getPercent(){
-      int percent = round((getVolt() - lowBat)/(fullBat - lowBat) * 100);
-      if(percent < 0){
-        return 0;
-      }
-      return percent;
+      return constrain(round((getVolt() - lowBat)/(fullBat - lowBat) * 100), 0, 100);
     }
 };

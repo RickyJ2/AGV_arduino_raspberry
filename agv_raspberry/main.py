@@ -12,7 +12,41 @@ header = {
         'websocketpass':'1234', 
         'id':'1'
     }
+goalPointList = []
+pathList = []
+# 0 = idle, 1 = follow path, 2 = obstacle avoidance, 3 = go-to-nearest point in path
+state = 0
 ioloop = IOLoop.instance()
+lidar = Lidar()
+arduino = Arduino()
+request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
+client = Client(request, 5)
+
+def clientOnMsg(msg):
+    if msg is None:
+        return
+    data = {
+        "cmd": msg
+    }
+    logging.info(f"Sending: {data}")
+    arduino.send(json.dumps(data))
+
+def sendAGVState():
+    data = {
+        "container": arduino.getContainer(),
+        "collision": arduino.getCollision(),
+        "orientation": arduino.getOrientation(),
+        "acceleration": arduino.getAcceleration(),
+        "power": arduino.getPower(),
+        "lidar": lidar.getScanData()
+    }
+    client.send(json.dumps(data))
+
+def errorHandler():
+    ioloop.stop()
+    client.closeConnection()
+    arduino.close()
+    lidar.stop()
 
 if __name__ == "__main__":
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
@@ -29,49 +63,16 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
+    logging.info("Program Start")
     try:
-        #Start Lidar
-        lidar = Lidar()
         lidar.start()
-
-        #Serial communication to Arduino
-        arduino = Arduino()
         arduino.start()
-
-        #Websocket communication to server
-        request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
-        client = Client(request, 5)
-        def clientOnMsg(msg):
-            if msg is None:
-                return
-            data = {
-                "cmd": msg
-            }
-            logging.info(f"Sending: {data}")
-            arduino.send(json.dumps(data))
         client.connect(clientOnMsg)
-
-        def sendAGVState():
-            data = {
-                "container": arduino.getContainer(),
-                "collision": arduino.getCollision(),
-                "orientation": arduino.getOrientation(),
-                "acceleration": arduino.getAcceleration(),
-                "power": arduino.getPower(),
-                "lidar": lidar.getScanData()
-            }
-            client.send(json.dumps(data))
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()
     except KeyboardInterrupt:
-        ioloop.stop()
-        client.closeConnection()
-        arduino.close()
-        lidar.stop()
+        errorHandler()
     except Exception as e:
         logging.error(f"Error: {e}")
-        ioloop.stop()
-        client.closeConnection()
-        arduino.close()
-        lidar.stop()
+        errorHandler()
     logging.info("Program exit")

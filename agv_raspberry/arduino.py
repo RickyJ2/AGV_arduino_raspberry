@@ -13,11 +13,7 @@ class Arduino:
         #init variable
         self.container = False
         self.collision = False
-        self.orientation = {
-            "yaw": 0,
-            "roll": 0,
-            "pitch": 0
-        }
+        self.orientation = 0 #yaw
         self.acceleration = {
             "x": 0,
             "y": 0,

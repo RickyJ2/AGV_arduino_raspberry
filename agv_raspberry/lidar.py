@@ -9,6 +9,7 @@ class Lidar:
         self.port = port
         self.scan_data = [0] * 360
         self.lidar = None
+        self.map = []
         #in mm
         self.max_distance = 10000
         self.min_distance = 0
