@@ -41,6 +41,13 @@ class VoltageReader {
     }
 
     int getPercent(){
-      return constrain(round((getVolt() - lowBat)/(fullBat - lowBat) * 100), 0, 100);
+      int percent = round((getVolt() - lowBat)/(fullBat - lowBat) * 100);
+      if(percent < 0){
+        return 0;
+      }else if(percent > 100){
+        return 100;
+      }else{
+        return percent;
+      }
     }
 };

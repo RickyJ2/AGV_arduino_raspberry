@@ -12,8 +12,8 @@ Proximity container(5);
 LimitSwitch uppperBumper(12);
 LimitSwitch bellowBumper(13);
 Kompas imu(4); 
-VoltageReader powerbank(A2, 7.5, 8.3);
-VoltageReader battery(A3, 6, 7.7);
+VoltageReader powerbank(A4, 7.5, 8.3); //A2 for id 01
+VoltageReader battery(A3, 7.2, 8.28);
 PIDController pid(2,5,1);
 //AGV State
 float targetAngle = 0;
@@ -42,13 +42,12 @@ void loop() {
   battery.updateState();
   //Send to raspberry
   JsonDocument data;
-//  data["container"] = container.getState();
-//  data["collision"] = uppperBumper.getState() || bellowBumper.getState();
+  data["container"] = container.getState();
+  data["collision"] = uppperBumper.getState() || bellowBumper.getState();
   vec3_t acceleration = imu.getAcceleration();
-//  data["orientation"] = imu.getOrientation();
-//  data["acceleration"]["x"] = acceleration.x;
-//  data["acceleration"]["y"] = acceleration.y;
-//  data["acceleration"]["z"] = acceleration.z;
+  data["orientation"] = imu.getOrientation();
+  data["acceleration"]["x"] = acceleration.x;
+  data["acceleration"]["y"] = acceleration.y;
   data["powerbank"] = powerbank.getPercent();
   data["baterai"] = battery.getPercent();
   
@@ -64,6 +63,7 @@ void loop() {
 //    JsonDocument input;
 //    deserializeJson(input, Serial);
 //    String cmd = input["cmd"];
+    //for control via Serial monitor
     String cmd = Serial.readStringUntil('\n');
     //Collission Routine
     if(cmd == "forward"){
