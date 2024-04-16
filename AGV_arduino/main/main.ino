@@ -18,7 +18,6 @@ PIDController pid(2,5,1);
 //AGV State
 float targetAngle = 0;
 bool isDriving = false;
-bool direction = true; //true: forward, false: backward
 
 void setup() {
   motor.init();
@@ -65,13 +64,8 @@ void loop() {
 //    String cmd = input["cmd"];
     //for control via Serial monitor
     String cmd = Serial.readStringUntil('\n');
-    //Collission Routine
     if(cmd == "forward"){
       isDriving = true;
-      direction = true;
-    }else if(cmd == "backward"){
-      isDriving = true;
-      direction = false;
     }else if(cmd == "right"){
       targetAngle += 90;
       if (targetAngle > 180){
@@ -88,21 +82,13 @@ void loop() {
       isDriving = false;
     }
   }
-
-  //PID Control for orientation
-  double controlSignal = pid.compute(imu.getOrientation(), targetAngle);
-  motor.setLeftSpeed(motor.getLeftSpeed() - controlSignal);
-  motor.setRightSpeed(motor.getRightSpeed() + controlSignal);
+  //safety collision
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
-  }else 
-  if(isDriving){
-    if(direction){
-      motor.forward();
-    }else{
-      motor.backward();
-    }
-    
+  }else if(isDriving){
+    //PID Control for orientation
+    double controlSignal = pid.compute(imu.getOrientation(), targetAngle);
+    motor.movePID(controlSignal);
   }else{
     motor.stop();
   }

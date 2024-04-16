@@ -9,6 +9,8 @@ class PIDController{
       this->kp = kp;
       this->ki = ki;
       this->kd = kd;
+      this->errSum = 0;
+      this->lastErr = 0;
     }
 
     double compute(double Input, double SetPoint){

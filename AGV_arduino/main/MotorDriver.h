@@ -21,7 +21,7 @@ class MotorDriver{
     void init(){
       left.init();
       right.init();
-      setSpeed(255);
+      setSpeed(0);
     }
     void setSpeed(int speed){
       setLeftSpeed(speed);
@@ -45,6 +45,7 @@ class MotorDriver{
         right.setSpeed(speed);
       } 
     }
+    //Manual Control
     void forward(){
       left.forward();
       right.forward();
@@ -64,6 +65,10 @@ class MotorDriver{
     void stop(){
       left.stop();
       right.stop();
+    }
+    void movePID(int controlSteer){
+      left.move(getLeftSpeed() - controlSteer);
+      right.move(getRightSpeed() + controlSteer);
     }
     int getLeftSpeed(){
       return left.getSpeed();
