@@ -64,9 +64,11 @@ class Lidar:
                 continue
             angle = math.radians(i)
             hexHeight = 350
-            hexWidth = hexHeight*math.sin(math.radians(60))
-            x = distance * math.cos(angle) / hexWidth
-            y = distance * math.sin(angle) / hexHeight
+            size = hexHeight/2
+            horiz = math.sqrt(3) * size
+            vert = 3/2 * size
+            x = distance * math.cos(angle) / horiz
+            y = distance * math.sin(angle) / vert
             q = math.floor(x + (y/math.tan(math.radians(30))))
             r = math.floor(y / math.cos(math.radians(30)))
             self.map.addObstacle(q, r)
