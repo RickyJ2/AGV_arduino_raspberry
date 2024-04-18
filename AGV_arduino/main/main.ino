@@ -17,7 +17,7 @@ VoltageReader powerbank(A2, 7.5, 8.3);
 //ID 02
 //VoltageReader powerbank(A4, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
-PIDController pid(2,5,1);
+PIDController pid(5,3,1);
 //AGV State
 float targetAngle = 0;
 bool isDriving = false;
@@ -68,6 +68,7 @@ void loop() {
     //for control via Serial monitor
     String cmd = Serial.readStringUntil('\n');
     if(cmd == "forward"){
+      targetAngle = imu.getOrientation();
       isDriving = true;
     }else if(cmd == "right"){
       targetAngle += 90;
