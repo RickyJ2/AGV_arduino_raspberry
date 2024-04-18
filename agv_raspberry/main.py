@@ -169,9 +169,9 @@ def errorHandler():
 if __name__ == "__main__":
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
-    # fileHandler = logging.FileHandler('/home/AGV/python.log')
-    # fileHandler.setLevel(logging.DEBUG)
-    # fileHandler.setFormatter(logFormatter)
+    fileHandler = logging.FileHandler('/home/AGV/python.log')
+    fileHandler.setLevel(logging.DEBUG)
+    fileHandler.setFormatter(logFormatter)
     #consoleHandler for Logging
     consoleHandler = logging.StreamHandler()
     consoleHandler.setLevel(logging.DEBUG)
@@ -179,12 +179,12 @@ if __name__ == "__main__":
     #Configure Logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    # logger.addHandler(fileHandler)
+    logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
     logging.info("Program Start")
     try:
-        # lidar.start()
-        # arduino.start()
+        lidar.start()
+        arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
         mainThread = threading.Thread(target=main,name="main", daemon=True)
