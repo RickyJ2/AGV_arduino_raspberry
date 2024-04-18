@@ -20,6 +20,12 @@ class Map:
         hex = self.getHexAt(q, r)
         if hex is not None:
             hex.walkable = False
+    def getObstacles(self):
+        obstacles = []
+        for hex in self.grid.values():
+            if not hex.walkable:
+                obstacles.append(hex)
+        return obstacles
     def getWalkableNeighbors(self, hex):
         neighbors = []
         for direction in hexDirections:

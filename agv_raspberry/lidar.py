@@ -71,7 +71,8 @@ class Lidar:
             self.map.addObstacle(q, r)
 
     def getLocalMap(self):
-        return self.map.grid
+        #return in string
+        return self.map.getObstacles().__str__()
 
     def stop(self):
         try:
