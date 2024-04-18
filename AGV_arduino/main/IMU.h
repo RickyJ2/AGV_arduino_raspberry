@@ -85,7 +85,7 @@ class Kompas{
       compass.dmpGetAccel(&aa, fifoBuffer);
       compass.dmpGetYawPitchRoll(ypr, &q, &gravity);
       //Konversi ke sistem +360 with respect to +x
-      ypr[0] = (ypr[0] * 180 / M_PI) + 180 + 90; 
+      ypr[0] = (-1 * (int) (ypr[0] * 180 / M_PI) + 90 + 360) % 360; 
       // ypr[1] = (ypr[1] * 180 / M_PI); // PITCH
       // ypr[2] = (ypr[2] * 180 / M_PI); // ROLL
       //Update Acceleration value

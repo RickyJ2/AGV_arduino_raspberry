@@ -16,11 +16,12 @@ VoltageReader powerbank(A2, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
 PIDController pid(5,3,1);
 //AGV State
-float targetAngle = 0;
+float targetAngle = 90;
+bool isDriving = false;
 
 void setup() {
   motor.init();
-  motor.setSpeed(200);
+  motor.setSpeed(240);
   container.init();
   uppperBumper.init();
   bellowBumper.init();
@@ -61,7 +62,6 @@ void loop() {
    JsonDocument input;
    deserializeJson(input, Serial);
    String type = input["type"];
-
    if(type == "direction"){
     int dir = input["direction"];
     targetAngle = dir;
@@ -74,14 +74,24 @@ void loop() {
   }
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
-  }else if(abs(orientation - targetAngle) < 3){
+  }else if(isDriving){
+   int delta = orientation - targetAngle;
+   if(targetAngle == 360) delta *= -1;
+   if(abs(delta) < 3 || delta > 360 - 3){
     motor.forward();
-  }else{
-    int delta = orientation - targetAngle;
-    if(delta < 0){
-      motor.turnRight();
     }else{
-      motor.turnLeft();
+      if(targetAngle == 360 || targetAngle == 0){
+        if(delta > 180){
+          delta -= 360;
+        }
+      }
+      if(delta < 0){
+        motor.turnLeft();
+      }else{
+        motor.turnRight();
+      }
     }
+  }else{
+    motor.stop(); 
   }
 }
