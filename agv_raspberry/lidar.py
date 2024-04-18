@@ -6,7 +6,7 @@ import threading
 from map import Map
 
 class Lidar:
-    def __init__(self, port = '/dev/ttyUSB1'):
+    def __init__(self, port = '/dev/ttyUSB0'):
         self.port = port
         self.lidar = None
         self.map = Map()
@@ -59,6 +59,8 @@ class Lidar:
                 sleep(5)
 
     def convertToHex(self, scan_data):
+        self.map.clearMap()
+        print("============================")
         for i, distance in enumerate(scan_data):
             if distance == 0:
                 continue
@@ -71,7 +73,8 @@ class Lidar:
             y = distance * math.sin(angle) / vert
             q = math.floor(x + (y/math.tan(math.radians(30))))
             r = math.floor(y / math.cos(math.radians(30)))
-            self.map.addObstacle(q, r)
+            self.map.addObstacle(q, r, distance, i)
+            print(distance/10, i, q, r)
 
     def getLocalMap(self):
         obstacles = self.map.getObstacles()
