@@ -7,7 +7,7 @@ import json
 from tornado.ioloop import IOLoop, PeriodicCallback
 from map import Map
 
-IP = "10.53.11.85"
+IP = "10.53.11.124"
 PORT = 8080
 header = { 
         'websocketpass':'1234', 
