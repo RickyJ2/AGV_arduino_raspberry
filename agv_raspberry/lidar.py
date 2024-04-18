@@ -3,13 +3,13 @@ import math
 from time import sleep
 from adafruit_rplidar import RPLidar, RPLidarException
 import threading
+from map import Map
 
 class Lidar:
     def __init__(self, port = '/dev/ttyUSB0'):
         self.port = port
-        self.scan_data = [0] * 360
         self.lidar = None
-        self.map = []
+        self.map = Map()
         #in mm
         self.max_distance = 10000
         self.min_distance = 0
@@ -51,14 +51,27 @@ class Lidar:
                             temp[min([359, math.floor(angle)])] = 0
                             continue
                         temp[min([359, math.floor(angle)])] = distance
-                    self.scan_data = temp
+                    self.convertToHex(temp)
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
                 sleep(5)
 
-    def getScanData(self):
-        return self.scan_data
+    def convertToHex(self, scan_data):
+        for i, distance in enumerate(scan_data):
+            if distance == 0:
+                continue
+            angle = math.radians(i)
+            hexHeight = 35
+            hexWidth = hexHeight*math.sin(math.radians(60))
+            x = distance * math.cos(angle) / hexWidth
+            y = distance * math.sin(angle) / hexHeight
+            q = x + (y/math.tan(math.radians(30)))
+            r = y / math.cos(math.radians(30))
+            self.map.addObstacle(q, r)
+
+    def getLocalMap(self):
+        return self.map.grid
 
     def stop(self):
         try:

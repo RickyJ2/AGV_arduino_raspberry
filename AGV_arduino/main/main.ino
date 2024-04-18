@@ -12,7 +12,10 @@ Proximity container(5);
 LimitSwitch uppperBumper(12);
 LimitSwitch bellowBumper(13);
 Kompas imu(4); 
-VoltageReader powerbank(A4, 7.5, 8.3); //A2 for id 01
+//ID 01
+VoltageReader powerbank(A2, 7.5, 8.3);
+//ID 02
+VoltageReader powerbank(A4, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
 PIDController pid(2,5,1);
 //AGV State

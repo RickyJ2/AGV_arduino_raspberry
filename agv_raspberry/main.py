@@ -5,6 +5,7 @@ from arduino import Arduino
 from lidar import Lidar
 import json
 from tornado.ioloop import IOLoop, PeriodicCallback
+from map import Map
 
 IP = "10.53.11.85"
 PORT = 8080
@@ -38,7 +39,7 @@ def sendAGVState():
         "orientation": arduino.getOrientation(),
         "acceleration": arduino.getAcceleration(),
         "power": arduino.getPower(),
-        "lidar": lidar.getScanData()
+        "localMap": lidar.getLocalMap()
     }
     client.send(json.dumps(data))
 
