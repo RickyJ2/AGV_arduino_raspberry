@@ -41,6 +41,7 @@ def clientOnMsg(msg):
         global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
         pathList.append(msg["data"]["path"])
+        print(msg)
     elif msg["type"] == "stop":
         global state
         state = 3
@@ -72,6 +73,7 @@ def main():
             state = 1
             currentGoal = goalPointList.pop(0)
             currentPath = pathList.pop(0)
+            currentPath.pop(0)
             currentCoord = Hex(0,0)
         elif state == 1:
             #if no path left set state to idle
@@ -85,8 +87,10 @@ def main():
                 continue
             #transition to new point in path
             point = currentPath.pop(0)
+            print("point", point)
             targetLandMark = lidar.map.getObstacles()
             currentTargetPoint = Hex(point[0],point[1])
+            print(currentTargetPoint)
             currentDir = findDirection(currentTargetPoint - currentCoord)
             for i in range(len(targetLandMark)):
                 targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
@@ -102,9 +106,11 @@ def main():
             #localization
             counter = 0
             for landmark in targetLandMark:
-                if lidar.map.getHexByKey(landmark.key()).walkable == False:
-                    counter += 1
-            if counter/targetLandMark.length() > 0.9:
+                temp = lidar.map.getHexByKey(landmark.key())
+                if temp is not None:
+                    if temp.walkable == False:
+                        counter += 1
+            if counter/len(targetLandMark) > 0.9:
                 msg = {
                     "type": "notif",
                     "data": "point"
@@ -123,7 +129,7 @@ def main():
             pass
 
 def errorHandler():
-    global runMainThread
+    global runMainThread, mainThread
     runMainThread = False
     mainThread.join()
     ioloop.stop()
@@ -152,7 +158,8 @@ if __name__ == "__main__":
         arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
-        mainThread = threading.Thread(target=main, daemon=True).start()
+        mainThread = threading.Thread(target=main, daemon=True)
+        mainThread.start()
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()
     except KeyboardInterrupt:

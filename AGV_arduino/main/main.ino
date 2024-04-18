@@ -63,12 +63,15 @@ void loop() {
    deserializeJson(input, Serial);
    String type = input["type"];
    if(type == "direction"){
-    int dir = input["direction"];
+    String temp = input["direction"];
+    int dir = temp.toInt();
     targetAngle = dir;
+    isDriving = true;
    }else if(type == "cmd"){
     String cmd = input["cmd"];
     if(cmd == "stop"){
       motor.stop();
+      isDriving = false;
     }
    }
   }
