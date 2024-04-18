@@ -6,7 +6,7 @@ import threading
 import json
 
 class Arduino:
-    def __init__(self, port = '/dev/ttyUSB1', baudrate = 9600):
+    def __init__(self, port = '/dev/ttyUSB0', baudrate = 9600):
         self.port = port
         self.baudrate = baudrate
         self.ser = None

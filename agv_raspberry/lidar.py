@@ -6,7 +6,7 @@ import threading
 from map import Map
 
 class Lidar:
-    def __init__(self, port = '/dev/ttyUSB0'):
+    def __init__(self, port = '/dev/ttyUSB1'):
         self.port = port
         self.lidar = None
         self.map = Map()
@@ -47,10 +47,11 @@ class Lidar:
                         break
                     temp = [0]*360
                     for _, angle, distance in scan:
+                        ang = (math.floor(angle) + 90) % 359 
                         if distance > self.max_distance or distance < self.min_distance:
-                            temp[min([359, math.floor(angle)])] = 0
+                            temp[min([359, ang])] = 0
                             continue
-                        temp[min([359, math.floor(angle)])] = distance
+                        temp[min([359,ang])] = distance
                     self.convertToHex(temp)
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
@@ -62,17 +63,19 @@ class Lidar:
             if distance == 0:
                 continue
             angle = math.radians(i)
-            hexHeight = 35
+            hexHeight = 350
             hexWidth = hexHeight*math.sin(math.radians(60))
             x = distance * math.cos(angle) / hexWidth
             y = distance * math.sin(angle) / hexHeight
-            q = x + (y/math.tan(math.radians(30)))
-            r = y / math.cos(math.radians(30))
+            q = math.floor(x + (y/math.tan(math.radians(30))))
+            r = math.floor(y / math.cos(math.radians(30)))
             self.map.addObstacle(q, r)
 
     def getLocalMap(self):
-        #return in string
-        return self.map.getObstacles().__str__()
+        obstacles = self.map.getObstacles()
+        for i in range(len(obstacles)):
+            obstacles[i] = {'x': obstacles[i].q, 'y': obstacles[i].r}
+        return obstacles
 
     def stop(self):
         try:
