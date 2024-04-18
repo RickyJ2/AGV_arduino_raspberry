@@ -6,7 +6,7 @@ from lidar import Lidar
 import json
 from tornado.ioloop import IOLoop, PeriodicCallback
 
-IP = "10.53.11.124"
+IP = "10.53.4.43"
 PORT = 8080
 header = { 
         'websocketpass':'1234', 
