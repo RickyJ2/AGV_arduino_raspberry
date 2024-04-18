@@ -37,6 +37,7 @@ class Client(object):
                 self.connect()
             except Exception as e:
                 logging.error(f"Websocket Error: {e}")
+                logging.error(f"error msg: {msg}")
 
     def closeConnection(self):
         if self.ws is None:

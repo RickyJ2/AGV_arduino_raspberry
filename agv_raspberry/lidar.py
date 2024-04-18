@@ -12,7 +12,7 @@ class Lidar:
         self.lidar = None
         self.map = Map()
         #in mm
-        self.max_distance = 10000
+        self.max_distance = 5000
         self.min_distance = 0
         self.arduino = arduino
     
@@ -62,6 +62,7 @@ class Lidar:
 
     def convertToHex(self, scan_data):
         self.map.clearMap()
+        # print("======================================")
         for i, distance in enumerate(scan_data):
             if distance == 0:
                 continue
@@ -73,6 +74,7 @@ class Lidar:
             q = (math.sqrt(3)/3 * x  - 1.0/3 * y) / size
             r = (2.0/3 * y) / size
             q, r = cubeRound(q, r)
+            # print(i, math.floor(distance), q, r)
             self.map.addObstacle(q, r)
 
     def getLocalMap(self):
