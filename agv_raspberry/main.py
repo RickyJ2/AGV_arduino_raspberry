@@ -58,6 +58,7 @@ def clientOnMsg(msg):
         pathList.append(msg["data"]["path"])
     elif msg["type"] == "stop":
         global state
+        logging.info("current state will 3")
         state = 3
 
 def sendAGVState():
@@ -87,6 +88,7 @@ def main():
                     continue
                 #set to new goal point
                 state = 1
+                logging.info("current state will 1")
                 currentGoal = goalPointList.pop(0)
                 currentPath = pathList.pop(0)
                 currentCoord = Hex(0,0)
@@ -94,6 +96,7 @@ def main():
                 #if no path left set state to idle
                 logging.info(f"current path: {currentPath}")
                 if len(currentPath) == 0:
+                    logging.info("current state will 0")
                     state = 0
                     logging.info(f"current goal list: {goalPointList}")
                     continue
@@ -111,6 +114,7 @@ def main():
                     "direction": dir
                 }
                 arduino.send(json.dumps(data))
+                logging.info("current state will 2")
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
@@ -118,6 +122,7 @@ def main():
                 if arduino.statuspoint:
                     logging.info("reached point main")
                     arduino.statuspoint = False
+                    logging.info("current state will 3")
                     state = 3
                     msg = {
                         "type": "notif",
@@ -140,6 +145,7 @@ def main():
                 #reached target point in path
                 logging.info("in state 3")
                 currentCoord = currentTargetPoint
+                logging.info("current state will 1")
                 state = 1
                 # data = {
                 #     "type": "cmd",

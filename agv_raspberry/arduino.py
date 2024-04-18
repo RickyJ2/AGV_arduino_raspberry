@@ -24,7 +24,7 @@ class Arduino:
     def connect(self):
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=1, dsrdtr=True, rtscts=True)
-            sleep(2)
+            sleep(3)
             self.reset()
             logging.info("Arduino connected")
         except serial.SerialException as e:
@@ -33,10 +33,11 @@ class Arduino:
 
     def reset(self):
         self.ser.dtr = False
-        sleep(2)
+        sleep(3)
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
         self.ser.dtr = True
+        logging.info("Arduino reset")
 
     def start(self):
         self.runThread = True
@@ -75,6 +76,7 @@ class Arduino:
                     logging.info(f"Arduino msg: {msg}")
             except Exception as e:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
+                self.reset()
 
     def send(self, message):
         self.ser.write(bytes(message, 'utf-8'))
