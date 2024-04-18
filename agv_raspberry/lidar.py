@@ -61,7 +61,6 @@ class Lidar:
 
     def convertToHex(self, scan_data):
         self.map.clearMap()
-        print("============================")
         for i, distance in enumerate(scan_data):
             if distance == 0:
                 continue
@@ -72,8 +71,6 @@ class Lidar:
             y = distance * math.sin(angle)
             q = (math.sqrt(3)/3 * x  - 1.0/3 * y) / size
             r = (2.0/3 * y) / size
-            # q = math.floor(x + (y/math.tan(math.radians(30))))
-            # r = math.floor(y / math.cos(math.radians(30)))
             q, r = cubeRound(q, r)
             self.map.addObstacle(q, r)
 
