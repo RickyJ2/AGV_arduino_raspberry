@@ -9,7 +9,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
 from map import Map
 
-IP = "10.53.4.43"
+IP = "10.53.15.210"
 PORT = 8080
 header = { 
         'websocketpass':'1234', 
