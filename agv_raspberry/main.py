@@ -5,7 +5,6 @@ from arduino import Arduino
 from lidar import Lidar
 import json
 from tornado.ioloop import IOLoop, PeriodicCallback
-from map import Map
 
 IP = "10.53.11.124"
 PORT = 8080
