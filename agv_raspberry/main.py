@@ -8,7 +8,7 @@ import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
 
-IP = "10.53.15.210"
+IP = "10.53.10.199"
 PORT = 8080
 header = { 
         'websocketpass':'1234', 
@@ -26,7 +26,7 @@ targetLandMark = []
 state = 0
 runMainThread = False
 mainThread = None
-ioloop = IOLoop.instance()
+ioloop = IOLoop.current()
 lidar = Lidar()
 arduino = Arduino()
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
@@ -36,11 +36,11 @@ def clientOnMsg(msg):
     if msg is None:
         return
     msg = json.loads(msg)
+    print(msg)
     if msg["type"] == "path":
         global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
         pathList.append(msg["data"]["path"])
-        print(msg)
     elif msg["type"] == "stop":
         global state
         state = 3
@@ -57,6 +57,7 @@ def sendAGVState():
             "localMap": lidar.getLocalMap()
         }
     }
+    lidar.setOrientation(arduino.getOrientation())
     client.send(json.dumps(msg))
 
 def main():
@@ -78,11 +79,11 @@ def main():
             #if no path left set state to idle
             if len(currentPath) == 0:
                 state = 0
-                msg = {
-                    "type": "notif",
-                    "data": "goal"
-                }
-                client.send(json.dumps(msg))
+                # msg = {
+                #     "type": "notif",
+                #     "data": "goal"
+                # }
+                # client.send(json.dumps(msg))
                 continue
             #transition to new point in path
             point = currentPath.pop(0)
@@ -92,6 +93,7 @@ def main():
             for i in range(len(targetLandMark)):
                 targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
             dir = currentDir * 60
+            print(f"target: {dir}")
             data = {
                 "type": "direction",
                 "direction": dir
@@ -102,12 +104,14 @@ def main():
             #collision prediction system and obstacle avoidance
             #localization
             if arduino.statuspoint:
+                logging.info("reached point")
                 arduino.statuspoint = False
-                msg = {
-                    "type": "notif",
-                    "data": "point"
-                }
-                client.send(json.dumps(msg))
+                state = 3
+                # msg = {
+                #     "type": "notif",
+                #     "data": "point"
+                # }
+                # client.send(json.dumps(msg))
             # counter = 0
             # for landmark in targetLandMark:
             #     temp = lidar.map.getHexByKey(landmark.key())

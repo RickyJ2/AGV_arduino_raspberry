@@ -32,6 +32,8 @@ void setup() {
 }
 
 void loop() {
+  JsonDocument info;
+  info["type"] = "info";
   //Update all sensor data
   unsigned long currentMillis = millis();
   unsigned long currentSecond = currentMillis/1000;
@@ -43,18 +45,19 @@ void loop() {
   battery.updateState();
   //Send to raspberry
   JsonDocument data;
-  data["container"] = container.getState();
-  data["collision"] = uppperBumper.getState() || bellowBumper.getState();
+  data["type"] = "state";
+  data["data"]["container"] = container.getState();
+  data["data"]["collision"] = uppperBumper.getState() || bellowBumper.getState();
   vec3_t acceleration = imu.getAcceleration();
   float orientation = imu.getOrientation();
-  data["orientation"] = orientation;
-  data["acceleration"]["x"] = acceleration.x;
-  data["acceleration"]["y"] = acceleration.y;
+  data["data"]["orientation"] = orientation;
+  data["data"]["acceleration"]["x"] = acceleration.x;
+  data["data"]["acceleration"]["y"] = acceleration.y;
   
    if(powerbank.getState() <= battery.getState()){
-     data["power"] = powerbank.getState();
+     data["data"]["power"] = powerbank.getState();
    }else{
-     data["power"] = battery.getState();
+     data["data"]["power"] = battery.getState();
    }
   serializeJson(data, Serial);
   Serial.println();
@@ -73,6 +76,7 @@ void loop() {
       String cmd = input["cmd"];
       if(cmd == "stop"){
         motor.stop();
+        isDriving = false;
       }
     }
   }
@@ -83,8 +87,13 @@ void loop() {
    if(targetAngle == 360) delta *= -1;
    if(abs(delta) < 3 || delta > 360 - 3){
     motor.forward();
-    delay(1200);
-    Serial.println("done");
+    delay(1400);
+    motor.stop();
+    isDriving = false;
+    JsonDocument notif;
+    notif["type"] = "notif";
+    serializeJson(notif, Serial);
+    Serial.println();
     }else{
       if(targetAngle == 360 || targetAngle == 0){
         if(delta > 180){
