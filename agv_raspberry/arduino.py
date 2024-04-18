@@ -78,6 +78,7 @@ class Arduino:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
 
     def send(self, message):
+        logging.info(f"send arduino msg: {message}")
         self.ser.write(bytes(message, 'utf-8'))
 
     def close(self):
