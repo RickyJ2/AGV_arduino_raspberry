@@ -1,7 +1,7 @@
 from hex import Hex, hexDirections
 
 class Map:
-    def __init__(self, size = 2):
+    def __init__(self, size = 3):
         self.grid = {}
         self.size = size
         self.createGrid()
@@ -18,7 +18,7 @@ class Map:
     def getHexAt(self, q, r):
         hex = Hex(q, r)
         return self.grid.get(hex.key())
-    def addObstacle(self, q, r, distance, degree):
+    def addObstacle(self, q, r):
         hex = self.getHexAt(q, r)
         if hex is not None:
             hex.walkable = False
