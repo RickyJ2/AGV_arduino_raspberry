@@ -67,8 +67,8 @@ class MotorDriver{
       right.stop();
     }
     void movePID(int controlSteer){
-      left.move(getLeftSpeed() - controlSteer);
-      right.move(getRightSpeed() + controlSteer);
+      left.move(getLeftSpeed() + controlSteer);
+      right.move(getRightSpeed() - controlSteer);
     }
     int getLeftSpeed(){
       return left.getSpeed();
