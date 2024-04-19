@@ -17,7 +17,6 @@ VoltageReader battery(A3, 7.2, 8.28);
 PIDController pid(5,3,1);
 //AGV State
 float targetAngle = 0;
-bool isDriving = false;
 
 void setup() {
   motor.init();
@@ -70,7 +69,6 @@ void loop() {
     String cmd = input["cmd"];
     if(cmd == "stop"){
       motor.stop();
-      isDriving = false;
     }
    }
   }
