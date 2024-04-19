@@ -46,15 +46,18 @@ def clientOnMsg(msg):
         state = 3
 
 def sendAGVState():
-    data = {
-        "container": arduino.getContainer(),
-        "collision": arduino.getCollision(),
-        "orientation": arduino.getOrientation(),
-        "acceleration": arduino.getAcceleration(),
-        "power": arduino.getPower(),
-        "localMap": lidar.getLocalMap()
+    msg = {
+        "type": "state",
+        "data": {
+            "container": arduino.getContainer(),
+            "collision": arduino.getCollision(),
+            "orientation": arduino.getOrientation(),
+            "acceleration": arduino.getAcceleration(),
+            "power": arduino.getPower(),
+            "localMap": lidar.getLocalMap()
+        }
     }
-    client.send(json.dumps(data))
+    client.send(json.dumps(msg))
 
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
