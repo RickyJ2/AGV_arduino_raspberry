@@ -39,11 +39,10 @@ class Kompas{
       Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
 
       compass.initialize();
-      pinMode(interrupt_pin, INPUT);
+      pinMode(this->interrupt_pin, INPUT);
 
       //Verify connection
       testConnection();
-      devStatus = compass.dmpInitialize();
 
       //Change with sensor's offset value
       //id 01 [-2275,-2274] --> [-12,5]  [-787,-786] --> [-6,12] [1091,1092] --> [16368,16386] [-233,-232] --> [-2,1]  [-211,-210] --> [0,2] [-53,-52] --> [0,3]
@@ -60,13 +59,14 @@ class Kompas{
 //      compass.setXAccelOffset(113);
 //      compass.setYAccelOffset(-34);
 //      compass.setZAccelOffset(2);
-      
+      compass.CalibrateGyro(6);
+      devStatus = compass.dmpInitialize();
       if (devStatus == 0) {
         compass.CalibrateAccel(6);
         compass.CalibrateGyro(6);
         compass.PrintActiveOffsets();
         compass.setDMPEnabled(true);    
-        attachInterrupt(digitalPinToInterrupt(interrupt_pin), dmpDataReady, RISING);
+        attachInterrupt(digitalPinToInterrupt(this->interrupt_pin), dmpDataReady, RISING);
         mpuIntStatus = compass.getIntStatus();
         dmpReady = true;
         // get expected DMP packet size for later comparison
@@ -84,10 +84,10 @@ class Kompas{
       compass.dmpGetGravity(&gravity, &q);
       compass.dmpGetAccel(&aa, fifoBuffer);
       compass.dmpGetYawPitchRoll(ypr, &q, &gravity);
-      //Update Orientation value +180 s/d -180
-      ypr[0] = (ypr[0] * 180 / M_PI); 
-      ypr[1] = (ypr[1] * 180 / M_PI); // PITCH
-      ypr[2] = (ypr[2] * 180 / M_PI); // ROLL
+      //Konversi ke sistem +360 with respect to +x
+      ypr[0] = (ypr[0] * 180 / M_PI) + 180 + 90; 
+      // ypr[1] = (ypr[1] * 180 / M_PI); // PITCH
+      // ypr[2] = (ypr[2] * 180 / M_PI); // ROLL
       //Update Acceleration value
       compass.dmpGetLinearAccel(&aaReal, &aa, &gravity);
     }

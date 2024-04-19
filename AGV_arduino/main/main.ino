@@ -21,6 +21,7 @@ bool isDriving = false;
 
 void setup() {
   motor.init();
+  motor.setSpeed(200);
   container.init();
   uppperBumper.init();
   bellowBumper.init();
@@ -44,7 +45,8 @@ void loop() {
   data["container"] = container.getState();
   data["collision"] = uppperBumper.getState() || bellowBumper.getState();
   vec3_t acceleration = imu.getAcceleration();
-  data["orientation"] = imu.getOrientation();
+  float orientation = imu.getOrientation();
+  data["orientation"] = orientation;
   data["acceleration"]["x"] = acceleration.x;
   data["acceleration"]["y"] = acceleration.y;
   
@@ -57,38 +59,31 @@ void loop() {
   Serial.println();
 
   if(Serial.available() > 0){
-//    JsonDocument input;
-//    deserializeJson(input, Serial);
-//    String cmd = input["cmd"];
-    //for control via Serial monitor
-    String cmd = Serial.readStringUntil('\n');
-    if(cmd == "forward"){
-      targetAngle = imu.getOrientation();
-      isDriving = true;
-    }else if(cmd == "right"){
-      targetAngle += 90;
-      if (targetAngle > 180){
-        targetAngle -= 360;
-      }
-      isDriving = false;
-    }else if(cmd == "left"){
-      targetAngle -= 90;
-      if (targetAngle <= -180){
-        targetAngle += 360;
-      }
-      isDriving = false;
-    }else if(cmd == "stop"){
+   JsonDocument input;
+   deserializeJson(input, Serial);
+   String type = input["type"];
+
+   if(type == "direction"){
+    int dir = input["direction"];
+    targetAngle = dir;
+   }else if(type == "cmd"){
+    String cmd = input["cmd"];
+    if(cmd == "stop"){
+      motor.stop();
       isDriving = false;
     }
+   }
   }
-  //safety collision
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
-  }else if(isDriving){
-    //PID Control for orientation
-    double controlSignal = pid.compute(imu.getOrientation(), targetAngle);
-    motor.movePID(controlSignal);
+  }else if(abs(orientation - targetAngle) < 3){
+    motor.forward();
   }else{
-    motor.stop();
+    int delta = orientation - targetAngle;
+    if(delta < 0){
+      motor.turnRight();
+    }else{
+      motor.turnLeft();
+    }
   }
 }

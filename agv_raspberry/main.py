@@ -40,7 +40,7 @@ def clientOnMsg(msg):
         pathList.append(msg["data"]["path"])
     elif msg["type"] == "stop":
         global state
-        state = 2
+        state = 3
 
 def sendAGVState():
     data = {
@@ -77,6 +77,7 @@ def main():
             currentTargetPoint = Hex(point[0],point[1])
             dir = findDirection(currentTargetPoint - currentCoord)
             data = {
+                "type": "direction",
                 "direction": dir
             }
             arduino.send(json.dumps(data))
@@ -89,6 +90,7 @@ def main():
             currentCoord = currentTargetPoint
             state = 1
             data = {
+                "type": "cmd",
                 "cmd": "stop"
             }
             arduino.send(json.dumps(data))

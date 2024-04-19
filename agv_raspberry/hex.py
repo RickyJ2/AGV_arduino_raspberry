@@ -43,7 +43,6 @@ def findDirection(hex):
             return i*60
     return -1
         
-
 def cubeRound(q, r):
     x = q
     z = r
