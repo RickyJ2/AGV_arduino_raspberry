@@ -66,7 +66,7 @@ class Lidar:
             if distance == 0:
                 continue
             angle = math.radians(i)
-            hexHeight = 350
+            hexHeight = 350 #in mm
             size = hexHeight/2
             x = distance * math.cos(angle)
             y = distance * math.sin(angle)
