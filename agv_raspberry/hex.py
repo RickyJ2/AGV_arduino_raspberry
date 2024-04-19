@@ -37,6 +37,13 @@ hexDirections = [
     Hex(-1, 0), Hex(-1, 1), Hex(0, 1),
 ]
 
+def findDirection(hex):
+    for i, direction in enumerate(hexDirections):
+        if direction == hex:
+            return i*60
+    return -1
+        
+
 def cubeRound(q, r):
     x = q
     z = r

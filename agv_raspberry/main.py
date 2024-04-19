@@ -4,7 +4,9 @@ from client import Client
 from arduino import Arduino
 from lidar import Lidar
 import json
+import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
+from hex import Hex, findDirection
 
 IP = "10.53.4.43"
 PORT = 8080
@@ -14,8 +16,14 @@ header = {
     }
 goalPointList = []
 pathList = []
-# 0 = idle, 1 = follow path, 2 = obstacle avoidance, 3 = go-to-nearest point in path
+currentGoal = None
+currentPath = []
+currentTargetPoint = None
+currentCoord = Hex(0,0)
+# 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
 state = 0
+runMainThread = False
+mainThread = None
 ioloop = IOLoop.instance()
 lidar = Lidar()
 arduino = Arduino()
@@ -25,11 +33,14 @@ client = Client(request, 5)
 def clientOnMsg(msg):
     if msg is None:
         return
-    data = {
-        "cmd": msg
-    }
-    logging.info(f"Sending: {data}")
-    arduino.send(json.dumps(data))
+    msg = json.loads(msg)
+    if msg["type"] == "path":
+        global pathList, goalPointList
+        goalPointList.append(msg["data"]["goal"])
+        pathList.append(msg["data"]["path"])
+    elif msg["type"] == "stop":
+        global state
+        state = 2
 
 def sendAGVState():
     data = {
@@ -42,7 +53,52 @@ def sendAGVState():
     }
     client.send(json.dumps(data))
 
+def main():
+    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint
+    while True:
+        if not runMainThread:
+            break
+        #if idle state set new goal and path
+        if state == 0:
+            if len(goalPointList) == 0:
+                continue
+            #set to new goal point
+            state = 1
+            currentGoal = goalPointList.pop(0)
+            currentPath = pathList.pop(0)
+            currentCoord = Hex(0,0)
+        elif state == 1:
+            #if no path left set state to idle
+            if len(currentPath) == 0:
+                state = 0
+                continue
+            #transition to new point in path
+            point = currentPath.pop(0)
+            currentTargetPoint = Hex(point[0],point[1])
+            dir = findDirection(currentTargetPoint - currentCoord)
+            data = {
+                "direction": dir
+            }
+            arduino.send(json.dumps(data))
+            state = 2
+        elif state == 2:
+            #collision prediction system and obstacle avoidance
+            pass
+        elif state == 3:
+            #reached target point in path
+            currentCoord = currentTargetPoint
+            state = 1
+            data = {
+                "cmd": "stop"
+            }
+            arduino.send(json.dumps(data))
+        elif state == 4:
+            pass
+
 def errorHandler():
+    global runMainThread
+    runMainThread = False
+    mainThread.join()
     ioloop.stop()
     client.closeConnection()
     arduino.close()
@@ -68,6 +124,8 @@ if __name__ == "__main__":
         lidar.start()
         arduino.start()
         client.connect(clientOnMsg)
+        runMainThread = True
+        mainThread = threading.Thread(target=main, daemon=True).start()
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()
     except KeyboardInterrupt:
