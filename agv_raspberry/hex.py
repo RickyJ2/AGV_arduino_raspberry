@@ -31,8 +31,25 @@ class Hex:
         return (self - other).length()
     def neighbor(self, direction):
         return self + hexDirections[direction]
-    
+
 hexDirections = [
     Hex(1, 0), Hex(1, -1), Hex(0, -1),
     Hex(-1, 0), Hex(-1, 1), Hex(0, 1),
 ]
+
+def cubeRound(q, r):
+    x = q
+    z = r
+    y = -x - z
+    rx = round(x)
+    ry = round(y)
+    rz = round(z)
+    x_diff = abs(rx - x)
+    y_diff = abs(ry - y)
+    z_diff = abs(rz - z)
+    if x_diff > y_diff and x_diff > z_diff:
+        rx = -ry - rz
+    elif y_diff > z_diff:
+        ry = -rx - rz
+    return rx, rz
+    
