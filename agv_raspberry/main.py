@@ -6,7 +6,8 @@ from lidar import Lidar
 import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
-from hex import Hex, findDirection
+from hex import Hex, findDirection, hexDirections
+from map import Map
 
 IP = "10.53.4.43"
 PORT = 8080
@@ -20,6 +21,8 @@ currentGoal = None
 currentPath = []
 currentTargetPoint = None
 currentCoord = Hex(0,0)
+currentDir = 0
+targetLandMark = []
 # 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
 state = 0
 runMainThread = False
@@ -54,7 +57,7 @@ def sendAGVState():
     client.send(json.dumps(data))
 
 def main():
-    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint
+    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
     while True:
         if not runMainThread:
             break
@@ -71,11 +74,20 @@ def main():
             #if no path left set state to idle
             if len(currentPath) == 0:
                 state = 0
+                msg = {
+                    "type": "notif",
+                    "data": "goal"
+                }
+                client.send(json.dumps(msg))
                 continue
             #transition to new point in path
             point = currentPath.pop(0)
+            targetLandMark = lidar.map.getObstacles()
             currentTargetPoint = Hex(point[0],point[1])
-            dir = findDirection(currentTargetPoint - currentCoord)
+            currentDir = findDirection(currentTargetPoint - currentCoord)
+            for i in range(len(targetLandMark)):
+                targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
+            dir = currentDir * 60
             data = {
                 "type": "direction",
                 "direction": dir
@@ -84,7 +96,17 @@ def main():
             state = 2
         elif state == 2:
             #collision prediction system and obstacle avoidance
-            pass
+            #localization
+            counter = 0
+            for landmark in targetLandMark:
+                if lidar.map.getHexByKey(landmark.key()).walkable == False:
+                    counter += 1
+            if counter/targetLandMark.length() > 0.9:
+                msg = {
+                    "type": "notif",
+                    "data": "point"
+                }
+                client.send(json.dumps(msg))
         elif state == 3:
             #reached target point in path
             currentCoord = currentTargetPoint

@@ -18,6 +18,8 @@ class Map:
     def getHexAt(self, q, r):
         hex = Hex(q, r)
         return self.grid.get(hex.key())
+    def getHexByKey(self, key):
+        return self.grid.get(key)
     def addObstacle(self, q, r):
         hex = self.getHexAt(q, r)
         if hex is not None:

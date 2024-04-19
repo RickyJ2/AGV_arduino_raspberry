@@ -40,7 +40,7 @@ hexDirections = [
 def findDirection(hex):
     for i, direction in enumerate(hexDirections):
         if direction == hex:
-            return i*60
+            return i
     return -1
         
 def cubeRound(q, r):
