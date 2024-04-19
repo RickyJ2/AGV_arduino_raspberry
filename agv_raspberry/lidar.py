@@ -7,7 +7,7 @@ from map import Map
 from hex import cubeRound
 
 class Lidar:
-    def __init__(self, port = '/dev/ttyUSB1'):
+    def __init__(self, port = '/dev/ttyUSB0'):
         self.port = port
         self.lidar = None
         self.map = Map()
@@ -60,6 +60,8 @@ class Lidar:
                 sleep(5)
 
     def convertToHex(self, scan_data):
+        self.map.clearMap()
+        print("============================")
         for i, distance in enumerate(scan_data):
             if distance == 0:
                 continue
