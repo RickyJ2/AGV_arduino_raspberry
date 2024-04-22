@@ -5,6 +5,7 @@ from adafruit_rplidar import RPLidar, RPLidarException
 import threading
 from map import Map
 from hex import cubeRound
+from main import arduino
 
 class Lidar:
     def __init__(self, port = '/dev/ttyUSB1'):
@@ -48,7 +49,7 @@ class Lidar:
                         break
                     temp = [0]*360
                     for _, angle, distance in scan:
-                        ang = (math.floor(angle) + 90) % 359 
+                        ang = (math.floor(angle) + arduino.getOrientation()) % 359 
                         if distance > self.max_distance or distance < self.min_distance:
                             temp[min([359, ang])] = 0
                             continue

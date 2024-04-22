@@ -7,7 +7,6 @@ import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
-from map import Map
 
 IP = "10.53.15.210"
 PORT = 8080
