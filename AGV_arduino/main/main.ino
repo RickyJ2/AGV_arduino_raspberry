@@ -59,18 +59,28 @@ void loop() {
   Serial.println();
 
   if(Serial.available() > 0){
-   JsonDocument input;
-   deserializeJson(input, Serial);
-   String type = input["type"];
-   if(type == "direction"){
-    int dir = input["direction"];
-    targetAngle = dir;
-   }else if(type == "cmd"){
-    String cmd = input["cmd"];
+    //read via serial monitor
+    String cmd = Serial.readStringUntil('\n');
     if(cmd == "stop"){
       motor.stop();
+    }else{
+      int time = cmd.toInt();
+      motor.forward();
+      delay(time);
+      motor.stop();
     }
-   }
+    // JsonDocument input;
+    // deserializeJson(input, Serial);
+    // String type = input["type"];
+    // if(type == "direction"){
+    //   int dir = input["direction"];
+    //   targetAngle = dir;
+    // }else if(type == "cmd"){
+    //   String cmd = input["cmd"];
+    //   if(cmd == "stop"){
+    //     motor.stop();
+    //   }
+    // }
   }
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
