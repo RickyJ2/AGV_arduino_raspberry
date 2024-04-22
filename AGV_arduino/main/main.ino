@@ -5,7 +5,6 @@
 #include "LimitSwitch.h"
 #include "IMU.h"
 #include "voltageReader.h"
-#include "PIDController.h"
 
 MotorDriver motor(6,7,8,9,10,11);
 Proximity container(5);
