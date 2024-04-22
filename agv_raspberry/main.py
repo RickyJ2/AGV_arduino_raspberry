@@ -28,8 +28,17 @@ state = 0
 runMainThread = False
 mainThread = None
 ioloop = IOLoop.current()
-arduino = Arduino()
-lidar = Lidar(arduino=arduino)
+
+ports = list(serial.tools.list_ports.comports())
+arduinoPort = ""
+lidarPort = ""
+for p in ports:
+    if p.description == "USB Serial":
+        arduinoPort = p.device
+    else:
+        lidarPort = p.device
+arduino = Arduino(port=arduinoPort)
+lidar = Lidar(arduino=arduino, port=lidarPort)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 
@@ -149,9 +158,6 @@ def errorHandler():
     lidar.stop()
 
 if __name__ == "__main__":
-    ports = list(serial.tools.list_ports.comports())
-    for p in ports:
-        print(p)
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
     fileHandler = logging.FileHandler('/home/AGV/python.log')

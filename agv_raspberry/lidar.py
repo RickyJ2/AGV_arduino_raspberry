@@ -7,7 +7,7 @@ from map import Map
 from hex import cubeRound
 
 class Lidar:
-    def __init__(self, arduino, port = '/dev/ttyUSB0'):
+    def __init__(self, arduino, port = '/dev/ttyUSB1'):
         self.port = port
         self.lidar = None
         self.map = Map()

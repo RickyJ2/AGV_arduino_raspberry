@@ -6,7 +6,7 @@ import threading
 import json
 
 class Arduino:
-    def __init__(self, port = '/dev/ttyUSB1', baudrate = 115200):
+    def __init__(self, port = '/dev/ttyUSB0', baudrate = 115200):
         self.port = port
         self.baudrate = baudrate
         self.ser = None
@@ -56,7 +56,6 @@ class Arduino:
                 continue
             try:
                 buffer = self.ser.readline().decode("utf-8")
-                print(buffer)
                 msg = json.loads(buffer)
                 if(msg["type"] == "state"):
                     data = msg["data"]
@@ -67,7 +66,7 @@ class Arduino:
                     self.power = data['power']
                 elif(msg["type"] == "notif"):
                     self.statuspoint = True
-                    print(f"reached point {msg["data"]}")
+                    # print(f"reached point {msg["data"]}")
                 else:
                     print(f"Arduino msg: {msg}")
             except Exception as e:
