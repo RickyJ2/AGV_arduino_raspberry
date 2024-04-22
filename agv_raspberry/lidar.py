@@ -68,7 +68,7 @@ class Lidar:
         for i, distance in enumerate(self.res_scan):
             if distance == 0:
                 continue
-            angle = math.radians(i)
+            angle = math.radians(360-i)
             hexHeight = 350 #in mm
             size = hexHeight/2
             x = distance * math.cos(angle)
@@ -76,7 +76,7 @@ class Lidar:
             q = (math.sqrt(3)/3 * x  - 1.0/3 * y) / size
             r = (2.0/3 * y) / size
             q, r = cubeRound(q, r)
-            print(i, math.floor(distance), q, r)
+            # print(i, math.floor(distance), q, r)
             self.map.addObstacle(q, r)
         # print(self.getLocalMap())
 
