@@ -70,9 +70,6 @@ def sendAGVState():
     }
     client.send(json.dumps(msg))
 
-def clientSendMsg(msg):
-    client.send(json.dumps(msg))
-
 def main():
     asyncio.set_event_loop(asyncio.new_event_loop())
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
@@ -91,13 +88,15 @@ def main():
                 currentCoord = Hex(0,0)
             elif state == 1:
                 #if no path left set state to idle
+                logging.info(f"current path: {currentPath}")
                 if len(currentPath) == 0:
                     state = 0
                     msg = {
                         "type": "notif",
                         "data": "goal"
                     }
-                    ioloop.add_callback(clientSendMsg(msg))
+                    client.send(json.dumps(msg))
+                    logging.info(f"current goal list: {goalPointList}")
                     continue
                 #transition to new point in path
                 point = currentPath.pop(0)
@@ -125,7 +124,7 @@ def main():
                         "type": "notif",
                         "data": "point"
                     }
-                    ioloop.add_callback(clientSendMsg(msg))
+                    client.send(json.dumps(msg))
                 # counter = 0
                 # for landmark in targetLandMark:
                 #     temp = lidar.map.getHexByKey(landmark.key())
@@ -140,13 +139,14 @@ def main():
                 #     client.send(json.dumps(msg))
             elif state == 3:
                 #reached target point in path
+                logging.info("in state 3")
                 currentCoord = currentTargetPoint
                 state = 1
-                data = {
-                    "type": "cmd",
-                    "cmd": "stop"
-                }
-                arduino.send(json.dumps(data))
+                # data = {
+                #     "type": "cmd",
+                #     "cmd": "stop"
+                # }
+                # arduino.send(json.dumps(data))
             elif state == 4:
                 pass
     except Exception as e:
