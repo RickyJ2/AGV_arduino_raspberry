@@ -83,7 +83,8 @@ void loop() {
    if(targetAngle == 360) delta *= -1;
    if(abs(delta) < 3 || delta > 360 - 3){
     motor.forward();
-    delay(1450);
+    delay(1200);
+    Serial.println("done");
     }else{
       if(targetAngle == 360 || targetAngle == 0){
         if(delta > 180){

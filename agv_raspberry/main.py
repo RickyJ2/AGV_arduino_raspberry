@@ -86,10 +86,8 @@ def main():
                 continue
             #transition to new point in path
             point = currentPath.pop(0)
-            print("point", point)
             targetLandMark = lidar.map.getObstacles()
             currentTargetPoint = Hex(point[0],point[1])
-            print(currentTargetPoint)
             currentDir = findDirection(currentTargetPoint - currentCoord)
             for i in range(len(targetLandMark)):
                 targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
@@ -103,18 +101,25 @@ def main():
         elif state == 2:
             #collision prediction system and obstacle avoidance
             #localization
-            counter = 0
-            for landmark in targetLandMark:
-                temp = lidar.map.getHexByKey(landmark.key())
-                if temp is not None:
-                    if temp.walkable == False:
-                        counter += 1
-            if counter/len(targetLandMark) > 0.9:
+            if arduino.statuspoint:
+                arduino.statuspoint = False
                 msg = {
                     "type": "notif",
                     "data": "point"
                 }
                 client.send(json.dumps(msg))
+            # counter = 0
+            # for landmark in targetLandMark:
+            #     temp = lidar.map.getHexByKey(landmark.key())
+            #     if temp is not None:
+            #         if temp.walkable == False:
+            #             counter += 1
+            # if counter/len(targetLandMark) > 0.9:
+            #     msg = {
+            #         "type": "notif",
+            #         "data": "point"
+            #     }
+            #     client.send(json.dumps(msg))
         elif state == 3:
             #reached target point in path
             currentCoord = currentTargetPoint

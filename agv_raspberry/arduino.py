@@ -19,6 +19,8 @@ class Arduino:
             "y": 0,
         }
         self.power = 100
+
+        self.statuspoint = False
     
     def connect(self):
         try:
@@ -48,6 +50,9 @@ class Arduino:
                 continue
             try:
                 buffer = self.ser.readline().decode("utf-8")
+                if(buffer == "done"):
+                    self.statuspoint = True
+                    continue
                 data = json.loads(buffer)
                 self.container = data['container']
                 self.collision = data['collision']
