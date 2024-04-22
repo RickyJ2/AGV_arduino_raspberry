@@ -45,8 +45,8 @@ def findDirection(hex):
         
 def cubeRound(q, r):
     x = q
-    z = r
-    y = -x - z
+    y = r
+    z = -x - y
     rx = round(x)
     ry = round(y)
     rz = round(z)
@@ -57,5 +57,5 @@ def cubeRound(q, r):
         rx = -ry - rz
     elif y_diff > z_diff:
         ry = -rx - rz
-    return rx, rz
+    return rx, ry
     

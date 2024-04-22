@@ -11,7 +11,7 @@ class Lidar:
         self.port = port
         self.lidar = None
         self.map = Map()
-        self.res_scan = [] * 360
+        self.res_scan = [0] * 360
         #in mm
         self.max_distance = 5000
         self.min_distance = 0
@@ -51,12 +51,12 @@ class Lidar:
                     for _, angle, distance in scan:
                         ang = (270 - (math.floor(angle))) % 360 
                         if distance > self.max_distance: 
-                            self.res_scan[min([359, ang])] = self.max_distance
+                            self.res_scan[ang] = self.max_distance
                             continue
                         elif distance < self.min_distance:
-                            self.res_scan[min([359, ang])] = 0
+                            self.res_scan[ang] = 0
                             continue
-                        self.res_scan[min([359,ang])] = distance
+                        self.res_scan[ang] = distance
                     self.convertToHex()
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
@@ -76,8 +76,9 @@ class Lidar:
             q = (math.sqrt(3)/3 * x  - 1.0/3 * y) / size
             r = (2.0/3 * y) / size
             q, r = cubeRound(q, r)
-            # print(i, math.floor(distance), q, r)
+            print(i, math.floor(distance), q, r)
             self.map.addObstacle(q, r)
+        # print(self.getLocalMap())
 
     def getLocalMap(self):
         obstacles = self.map.getObstacles()
