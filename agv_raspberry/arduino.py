@@ -65,8 +65,9 @@ class Arduino:
                     self.acceleration = data['acceleration']
                     self.power = data['power']
                 elif(msg["type"] == "notif"):
+                    data = msg["data"]
                     self.statuspoint = True
-                    # print(f"reached point {msg["data"]}")
+                    print(f"reached point {data}")
                 else:
                     print(f"Arduino msg: {msg}")
             except Exception as e:

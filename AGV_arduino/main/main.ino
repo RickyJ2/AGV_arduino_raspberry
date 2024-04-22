@@ -90,6 +90,7 @@ void loop() {
     if(abs(delta) < 3 || delta > 360 - 3){
       motor.forward();
       totalTime += currentMillis - previousMillis;
+      Serial.println("driving");
       if(totalTime >= 1400){
         motor.stop();
         isDriving = false;

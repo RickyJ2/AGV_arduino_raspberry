@@ -35,7 +35,7 @@ lidarPort = ""
 for p in ports:
     if p.description == "USB Serial":
         arduinoPort = p.device
-    else:
+    else:   
         lidarPort = p.device
 arduino = Arduino(port=arduinoPort)
 lidar = Lidar(arduino=arduino, port=lidarPort)
