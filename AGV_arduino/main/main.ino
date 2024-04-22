@@ -33,7 +33,8 @@ void setup() {
 
 void loop() {
   //Update all sensor data
-  unsigned long currentSecond = millis()/1000;
+  unsigned long currentMillis = millis();
+  unsigned long currentSecond = currentMillis/1000;
   container.updateState(currentSecond);
   uppperBumper.updateState();
   bellowBumper.updateState();
@@ -60,27 +61,20 @@ void loop() {
 
   if(Serial.available() > 0){
     //read via serial monitor
-    String cmd = Serial.readStringUntil('\n');
-    if(cmd == "stop"){
-      motor.stop();
-    }else{
-      int time = cmd.toInt();
-      motor.forward();
-      delay(time);
-      motor.stop();
+    // String cmd = Serial.readStringUntil('\n');
+    JsonDocument input;
+    deserializeJson(input, Serial);
+    String type = input["type"];
+    if(type == "direction"){
+      int dir = input["direction"];
+      targetAngle = dir;
+      isDriving = true;
+    }else if(type == "cmd"){
+      String cmd = input["cmd"];
+      if(cmd == "stop"){
+        motor.stop();
+      }
     }
-    // JsonDocument input;
-    // deserializeJson(input, Serial);
-    // String type = input["type"];
-    // if(type == "direction"){
-    //   int dir = input["direction"];
-    //   targetAngle = dir;
-    // }else if(type == "cmd"){
-    //   String cmd = input["cmd"];
-    //   if(cmd == "stop"){
-    //     motor.stop();
-    //   }
-    // }
   }
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
@@ -89,6 +83,7 @@ void loop() {
    if(targetAngle == 360) delta *= -1;
    if(abs(delta) < 3 || delta > 360 - 3){
     motor.forward();
+    delay(1450);
     }else{
       if(targetAngle == 360 || targetAngle == 0){
         if(delta > 180){
