@@ -11,9 +11,9 @@ from hex import Hex, findDirection, hexDirections
 IP = "10.53.10.199"
 PORT = 8080
 header = { 
-        'websocketpass':'1234', 
-        'id':'1'
-    }
+    'websocketpass':'1234', 
+    'id':'1'
+}
 goalPointList = []
 pathList = []
 currentGoal = None
@@ -62,79 +62,82 @@ def sendAGVState():
 
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
-    while True:
-        if not runMainThread:
-            break
-        #if idle state set new goal and path
-        if state == 0:
-            if len(goalPointList) == 0:
-                continue
-            #set to new goal point
-            state = 1
-            currentGoal = goalPointList.pop(0)
-            currentPath = pathList.pop(0)
-            currentPath.pop(0)
-            currentCoord = Hex(0,0)
-        elif state == 1:
-            #if no path left set state to idle
-            if len(currentPath) == 0:
-                state = 0
-                # msg = {
-                #     "type": "notif",
-                #     "data": "goal"
-                # }
-                # client.send(json.dumps(msg))
-                continue
-            #transition to new point in path
-            point = currentPath.pop(0)
-            targetLandMark = lidar.map.getObstacles()
-            currentTargetPoint = Hex(point[0],point[1])
-            currentDir = findDirection(currentTargetPoint - currentCoord)
-            for i in range(len(targetLandMark)):
-                targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
-            dir = currentDir * 60
-            print(f"target: {dir}")
-            data = {
-                "type": "direction",
-                "direction": dir
-            }
-            arduino.send(json.dumps(data))
-            state = 2
-        elif state == 2:
-            #collision prediction system and obstacle avoidance
-            #localization
-            if arduino.statuspoint:
-                logging.info("reached point")
-                arduino.statuspoint = False
-                state = 3
-                # msg = {
-                #     "type": "notif",
-                #     "data": "point"
-                # }
-                # client.send(json.dumps(msg))
-            # counter = 0
-            # for landmark in targetLandMark:
-            #     temp = lidar.map.getHexByKey(landmark.key())
-            #     if temp is not None:
-            #         if temp.walkable == False:
-            #             counter += 1
-            # if counter/len(targetLandMark) > 0.9:
-            #     msg = {
-            #         "type": "notif",
-            #         "data": "point"
-            #     }
-            #     client.send(json.dumps(msg))
-        elif state == 3:
-            #reached target point in path
-            currentCoord = currentTargetPoint
-            state = 1
-            data = {
-                "type": "cmd",
-                "cmd": "stop"
-            }
-            arduino.send(json.dumps(data))
-        elif state == 4:
-            pass
+    try:
+        while True:
+            if not runMainThread:
+                break
+            #if idle state set new goal and path
+            if state == 0:
+                if len(goalPointList) == 0:
+                    continue
+                #set to new goal point
+                state = 1
+                currentGoal = goalPointList.pop(0)
+                currentPath = pathList.pop(0)
+                currentPath.pop(0)
+                currentCoord = Hex(0,0)
+            elif state == 1:
+                #if no path left set state to idle
+                if len(currentPath) == 0:
+                    state = 0
+                    msg = {
+                        "type": "notif",
+                        "data": "goal"
+                    }
+                    ioloop.add_callback(client.send(json.dumps(msg)))
+                    continue
+                #transition to new point in path
+                point = currentPath.pop(0)
+                targetLandMark = lidar.map.getObstacles()
+                currentTargetPoint = Hex(point[0],point[1])
+                currentDir = findDirection(currentTargetPoint - currentCoord)
+                for i in range(len(targetLandMark)):
+                    targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
+                dir = currentDir * 60
+                print(f"target: {dir}")
+                data = {
+                    "type": "direction",
+                    "direction": dir
+                }
+                arduino.send(json.dumps(data))
+                state = 2
+            elif state == 2:
+                #collision prediction system and obstacle avoidance
+                #localization
+                if arduino.statuspoint:
+                    logging.info("reached point")
+                    arduino.statuspoint = False
+                    state = 3
+                    msg = {
+                        "type": "notif",
+                        "data": "point"
+                    }
+                    ioloop.add_callback(client.send(json.dumps(msg)))
+                # counter = 0
+                # for landmark in targetLandMark:
+                #     temp = lidar.map.getHexByKey(landmark.key())
+                #     if temp is not None:
+                #         if temp.walkable == False:
+                #             counter += 1
+                # if counter/len(targetLandMark) > 0.9:
+                #     msg = {
+                #         "type": "notif",
+                #         "data": "point"
+                #     }
+                #     client.send(json.dumps(msg))
+            elif state == 3:
+                #reached target point in path
+                currentCoord = currentTargetPoint
+                state = 1
+                data = {
+                    "type": "cmd",
+                    "cmd": "stop"
+                }
+                arduino.send(json.dumps(data))
+            elif state == 4:
+                pass
+    except Exception as e:
+        logging.error(f"Main Error: {e}")
 
 def errorHandler():
     global runMainThread, mainThread
