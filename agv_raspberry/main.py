@@ -69,6 +69,9 @@ def sendAGVState():
     }
     client.send(json.dumps(msg))
 
+def clientSendMsg(msg):
+    client.send(json.dumps(msg))
+
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
     try:
@@ -93,7 +96,7 @@ def main():
                         "type": "notif",
                         "data": "goal"
                     }
-                    ioloop.add_callback(client.send(json.dumps(msg)))
+                    ioloop.add_callback(clientSendMsg(msg))
                     continue
                 #transition to new point in path
                 point = currentPath.pop(0)
@@ -121,7 +124,7 @@ def main():
                         "type": "notif",
                         "data": "point"
                     }
-                    ioloop.add_callback(client.send(json.dumps(msg)))
+                    ioloop.add_callback(clientSendMsg(msg))
                 # counter = 0
                 # for landmark in targetLandMark:
                 #     temp = lidar.map.getHexByKey(landmark.key())
