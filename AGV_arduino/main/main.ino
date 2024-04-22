@@ -18,6 +18,8 @@ PIDController pid(5,3,1);
 //AGV State
 float targetAngle = 90;
 bool isDriving = false;
+unsigned long previousMillis = 0;
+unsigned long totalTime = 0;
 
 void setup() {
   motor.init();
@@ -72,6 +74,8 @@ void loop() {
       int dir = input["direction"];
       targetAngle = dir;
       isDriving = true;
+      previousMillis = currentMillis;
+      totalTime = 0;
     }else if(type == "cmd"){
       String cmd = input["cmd"];
       if(cmd == "stop"){
@@ -87,13 +91,16 @@ void loop() {
    if(targetAngle == 360) delta *= -1;
    if(abs(delta) < 3 || delta > 360 - 3){
     motor.forward();
-    delay(1400);
-    motor.stop();
-    isDriving = false;
-    JsonDocument notif;
-    notif["type"] = "notif";
-    serializeJson(notif, Serial);
-    Serial.println();
+    totalTime += currentMillis - previousMillis;
+    if(totalTime >= 1400){
+      motor.stop();
+      isDriving = false;
+      JsonDocument notif;
+      notif["type"] = "notif";
+      serializeJson(notif, Serial);
+      Serial.println();
+    }
+    previousMillis = currentMillis;
     }else{
       if(targetAngle == 360 || targetAngle == 0){
         if(delta > 180){
