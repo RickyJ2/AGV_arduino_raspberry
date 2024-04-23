@@ -24,20 +24,26 @@ class Arduino:
     
     def connect(self):
         try:
-            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
-            sleep(3)
-            self.ser.reset_input_buffer()
-            self.ser.reset_output_buffer()
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1, dsrdtr=True, rtscts=True)
+            sleep(2)
+            self.reset()
             logging.info("Arduino connected")
         except serial.SerialException as e:
             logging.error(f"Arduino's connection Failed: {e}")
             sleep(5)
 
+    def reset(self):
+        self.ser.dtr = False
+        sleep(2)
+        self.ser.reset_input_buffer()
+        self.ser.reset_output_buffer()
+        self.ser.dtr = True
+
     def start(self):
         self.runThread = True
         self.thread_read = threading.Thread(target=self.reader, daemon=True)
         self.thread_read.start()
-    
+
     def reader(self):
         while True:
             if self.ser is None:
@@ -61,7 +67,7 @@ class Arduino:
                     self.power = data['power']
                 elif(msg["type"] == "notif"):
                     self.statuspoint = True
-                    print("reached point")
+                    print(f"reached point {msg["data"]}")
                 else:
                     print(f"Arduino msg: {msg}")
             except Exception as e:
