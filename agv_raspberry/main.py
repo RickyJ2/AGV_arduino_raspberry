@@ -86,7 +86,6 @@ def main():
                 state = 1
                 currentGoal = goalPointList.pop(0)
                 currentPath = pathList.pop(0)
-                currentPath.pop(0)
                 currentCoord = Hex(0,0)
             elif state == 1:
                 #if no path left set state to idle
