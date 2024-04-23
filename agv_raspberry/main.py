@@ -114,7 +114,7 @@ def main():
                 #collision prediction system and obstacle avoidance
                 #localization
                 if arduino.statuspoint:
-                    logging.info("reached point")
+                    logging.info("reached point main")
                     arduino.statuspoint = False
                     state = 3
                     msg = {
