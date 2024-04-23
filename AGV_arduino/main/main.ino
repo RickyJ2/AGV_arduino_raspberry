@@ -14,7 +14,6 @@ LimitSwitch bellowBumper(13);
 Kompas imu(4); 
 VoltageReader powerbank(A2, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
-PIDController pid(5,3,1);
 //AGV State
 float targetAngle = 90;
 bool isDriving = false;
