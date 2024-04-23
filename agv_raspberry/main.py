@@ -7,6 +7,7 @@ import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
+import serial.tools.list_ports
 
 IP = "10.53.10.199"
 PORT = 8080
@@ -148,6 +149,9 @@ def errorHandler():
     lidar.stop()
 
 if __name__ == "__main__":
+    ports = list(serial.tools.list_ports.comports())
+    for p in ports:
+        print(p)
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
     fileHandler = logging.FileHandler('/home/AGV/python.log')
