@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from tornado import httpclient
 from client import Client
@@ -73,6 +74,7 @@ def clientSendMsg(msg):
     client.send(json.dumps(msg))
 
 def main():
+    asyncio.set_event_loop(asyncio.new_event_loop())
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
     try:
         while True:
