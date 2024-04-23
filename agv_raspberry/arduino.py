@@ -1,4 +1,3 @@
-
 import logging
 from time import sleep
 import serial
@@ -67,9 +66,12 @@ class Arduino:
                 elif(msg["type"] == "notif"):
                     data = msg["data"]
                     self.statuspoint = True
-                    print(f"reached point {data}")
+                    logging.info(f"reached point {data}")
+                elif(msg["type"] == "info"):
+                    data = msg["data"]
+                    logging.info(f"Arduino info: {data}")
                 else:
-                    print(f"Arduino msg: {msg}")
+                    logging.info(f"Arduino msg: {msg}")
             except Exception as e:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
 

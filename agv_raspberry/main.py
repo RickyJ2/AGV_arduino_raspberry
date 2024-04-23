@@ -46,7 +46,7 @@ def clientOnMsg(msg):
     if msg is None:
         return
     msg = json.loads(msg)
-    print(msg)
+    logging.info(msg)
     if msg["type"] == "path":
         global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
@@ -103,7 +103,7 @@ def main():
                 for i in range(len(targetLandMark)):
                     targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
                 dir = currentDir * 60
-                print(f"target: {dir}")
+                logging.info(f"target: {dir}")
                 data = {
                     "type": "direction",
                     "direction": dir
