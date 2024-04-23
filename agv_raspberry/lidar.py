@@ -7,14 +7,14 @@ from map import Map
 from hex import cubeRound
 
 class Lidar:
-    def __init__(self, port = '/dev/ttyUSB0'):
+    def __init__(self, arduino, port = '/dev/ttyUSB0'):
         self.port = port
         self.lidar = None
         self.map = Map()
         #in mm
         self.max_distance = 10000
         self.min_distance = 0
-        self.orientation = 90
+        self.arduino = arduino
     
     def checkHealth(self):
         if self.lidar.health[1] == 0 : 
@@ -33,7 +33,7 @@ class Lidar:
         
     def start(self):
         self.runThread = True
-        self.thread = threading.Thread(target=self._scan, daemon=True)
+        self.thread = threading.Thread(target=self._scan, name="Lidar", daemon=True)
         self.thread.start()
 
     def _scan(self):
@@ -49,7 +49,7 @@ class Lidar:
                         break
                     temp = [0]*360
                     for _, angle, distance in scan:
-                        ang = (math.floor(angle) + self.orientation) % 359 
+                        ang = (math.floor(angle) + self.arduino.getOrientation()) % 359 
                         if distance > self.max_distance or distance < self.min_distance:
                             temp[min([359, ang])] = 0
                             continue
@@ -80,9 +80,6 @@ class Lidar:
         for i in range(len(obstacles)):
             obstacles[i] = {'x': obstacles[i].q, 'y': obstacles[i].r}
         return obstacles
-    
-    def setOrientation(self, orientation):
-        self.orientation = orientation
         
     def stop(self):
         try:

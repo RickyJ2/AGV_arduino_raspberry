@@ -13,7 +13,7 @@ class Arduino:
         #init variable
         self.container = False
         self.collision = False
-        self.orientation = 0 #yaw
+        self.orientation = 90 #yaw
         self.acceleration = {
             "x": 0,
             "y": 0,
@@ -41,7 +41,7 @@ class Arduino:
 
     def start(self):
         self.runThread = True
-        self.thread_read = threading.Thread(target=self.reader, daemon=True)
+        self.thread_read = threading.Thread(target=self.reader, name="Arduino", daemon=True)
         self.thread_read.start()
 
     def reader(self):

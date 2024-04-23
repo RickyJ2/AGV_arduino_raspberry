@@ -27,8 +27,8 @@ state = 0
 runMainThread = False
 mainThread = None
 ioloop = IOLoop.current()
-lidar = Lidar()
 arduino = Arduino()
+lidar = Lidar(arduino=arduino)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 
@@ -57,7 +57,6 @@ def sendAGVState():
             "localMap": lidar.getLocalMap()
         }
     }
-    lidar.setOrientation(arduino.getOrientation())
     client.send(json.dumps(msg))
 
 def main():
@@ -169,7 +168,7 @@ if __name__ == "__main__":
         arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
-        mainThread = threading.Thread(target=main, daemon=True)
+        mainThread = threading.Thread(target=main,name="main", daemon=True)
         mainThread.start()
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()
