@@ -1,8 +1,6 @@
 #include "Motor.h"
-#define maxSpeed 255
+#define maxSpeed 250
 #define minSpeed 160
-#define MOTOR_DELTAMAX 75
-#define MOTOR_NOMINAL 180
 /*
   Lebar Roda 36mm
   Jarak antar titik pusat Roda 189mm
@@ -47,7 +45,6 @@ class MotorDriver{
         right.setSpeed(speed);
       } 
     }
-    //Manual Control
     void forward(){
       left.forward();
       right.forward();
@@ -67,12 +64,6 @@ class MotorDriver{
     void stop(){
       left.stop();
       right.stop();
-    }
-    void movePID(int controlSteer){
-      if( controlSteer>+MOTOR_DELTAMAX ) controlSteer= +MOTOR_DELTAMAX;
-      if( controlSteer<-MOTOR_DELTAMAX ) controlSteer= -MOTOR_DELTAMAX;
-      left.move(MOTOR_NOMINAL + controlSteer);
-      right.move(MOTOR_NOMINAL - controlSteer);
     }
     int getLeftSpeed(){
       return left.getSpeed();

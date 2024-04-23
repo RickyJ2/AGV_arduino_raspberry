@@ -34,19 +34,6 @@ class Motor {
       digitalWrite(in1, LOW);
       digitalWrite(in2, LOW);
     }
-    //Auto Move
-    void move(int speed){
-      if(speed == 0){
-        stop();
-        setSpeed(0);
-      }else if(speed > 0){
-        forward();
-        setSpeed(speed);
-      }else{
-        backward();
-        setSpeed(-speed);
-      }
-    }
     int getSpeed(){
       return speed;
     }

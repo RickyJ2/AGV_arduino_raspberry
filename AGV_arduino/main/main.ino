@@ -29,7 +29,7 @@ void setup() {
   imu.init();
   powerbank.init();
   battery.init();
-  Serial.begin(9600);
+  Serial.begin(115200);
 }
 
 void loop() {
@@ -55,11 +55,11 @@ void loop() {
   data["data"]["acceleration"]["x"] = acceleration.x;
   data["data"]["acceleration"]["y"] = acceleration.y;
   
-   if(powerbank.getState() <= battery.getState()){
-     data["data"]["power"] = powerbank.getState();
-   }else{
-     data["data"]["power"] = battery.getState();
-   }
+  if(powerbank.getState() <= battery.getState()){
+    data["data"]["power"] = powerbank.getState();
+  }else{
+    data["data"]["power"] = battery.getState();
+  }
   serializeJson(data, Serial);
   Serial.println();
 
@@ -86,20 +86,20 @@ void loop() {
   if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
   }else if(isDriving){
-   int delta = orientation - targetAngle;
-   if(targetAngle == 360) delta *= -1;
-   if(abs(delta) < 3 || delta > 360 - 3){
-    motor.forward();
-    totalTime += currentMillis - previousMillis;
-    if(totalTime >= 1400){
-      motor.stop();
-      isDriving = false;
-      JsonDocument notif;
-      notif["type"] = "notif";
-      serializeJson(notif, Serial);
-      Serial.println();
-    }
-    previousMillis = currentMillis;
+    int delta = orientation - targetAngle;
+    if(targetAngle == 360) delta *= -1;
+    if(abs(delta) < 3 || delta > 360 - 3){
+      motor.forward();
+      totalTime += currentMillis - previousMillis;
+      if(totalTime >= 1400){
+        motor.stop();
+        isDriving = false;
+        JsonDocument notif;
+        notif["type"] = "notif";
+        notif["data"] = totalTime;
+        serializeJson(notif, Serial);
+        Serial.println();
+      }
     }else{
       if(targetAngle == 360 || targetAngle == 0){
         if(delta > 180){
@@ -112,6 +112,7 @@ void loop() {
         motor.turnRight();
       }
     }
+    previousMillis = currentMillis;
   }else{
     motor.stop(); 
   }
