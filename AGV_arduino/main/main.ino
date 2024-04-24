@@ -21,7 +21,8 @@ unsigned long totalTime = 0;
 
 void setup() {
   motor.init();
-  motor.setSpeed(240);
+  motor.setLeftSpeed(185);
+  motor.setRightSpeed(250);
   container.init();
   uppperBumper.init();
   bellowBumper.init();
