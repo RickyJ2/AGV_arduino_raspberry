@@ -91,11 +91,6 @@ def main():
                 logging.info(f"current path: {currentPath}")
                 if len(currentPath) == 0:
                     state = 0
-                    msg = {
-                        "type": "notif",
-                        "data": "goal"
-                    }
-                    client.send(json.dumps(msg))
                     logging.info(f"current goal list: {goalPointList}")
                     continue
                 #transition to new point in path
