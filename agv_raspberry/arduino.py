@@ -55,7 +55,7 @@ class Arduino:
             if not (self.ser.in_waiting > 0):
                 continue
             try:
-                buffer = self.ser.readline().decode("utf-8")
+                buffer = self.ser.read_until(b'\n').decode("utf-8")
                 msg = json.loads(buffer)
                 if(msg["type"] == "state"):
                     data = msg["data"]
