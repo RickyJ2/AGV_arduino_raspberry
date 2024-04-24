@@ -25,6 +25,7 @@ currentCoord = Hex(0,0)
 currentDir = 0
 targetLandMark = []
 # 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
+globalCoordinate = Hex(0,0)
 state = 0
 runMainThread = False
 mainThread = None
@@ -48,7 +49,10 @@ def clientOnMsg(msg):
         return
     msg = json.loads(msg)
     logging.info(msg)
-    if msg["type"] == "path":
+    if msg["type"] == "position":
+        global globalCoordinate
+        globalCoordinate = Hex(msg["data"]["x"],msg["data"]["y"])
+    elif msg["type"] == "path":
         global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
         pathList.append(msg["data"]["path"])
@@ -159,9 +163,9 @@ def errorHandler():
 if __name__ == "__main__":
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
-    fileHandler = logging.FileHandler('/home/AGV/python.log')
-    fileHandler.setLevel(logging.DEBUG)
-    fileHandler.setFormatter(logFormatter)
+    # fileHandler = logging.FileHandler('/home/AGV/python.log')
+    # fileHandler.setLevel(logging.DEBUG)
+    # fileHandler.setFormatter(logFormatter)
     #consoleHandler for Logging
     consoleHandler = logging.StreamHandler()
     consoleHandler.setLevel(logging.DEBUG)
@@ -169,12 +173,12 @@ if __name__ == "__main__":
     #Configure Logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    logger.addHandler(fileHandler)
+    # logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
     logging.info("Program Start")
     try:
-        lidar.start()
-        arduino.start()
+        # lidar.start()
+        # arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
         mainThread = threading.Thread(target=main,name="main", daemon=True)
