@@ -9,7 +9,7 @@ scan_data = [0] * 360
 
 pygame.init()
 # Setup the RPLidar
-PORT_NAME = "COM7"
+PORT_NAME = "/dev/ttyUSB0"
 lidar = RPLidar(None, PORT_NAME, timeout=3)
 
 # Set up the drawing window
@@ -23,6 +23,8 @@ def GameUpdate(distances_list):
             running = False
     screen.fill((20, 10, 30))
     for i, d in enumerate(distances_list):
+        if i  > 45:
+            continue
         dx = 300 + (d*math.sin(math.radians(i)))
         dy = 300 + (d*math.cos(math.radians(i)))
         pygame.draw.aaline(screen, pygame.Color(100,100,120), (300,300), (dx, dy), 1)

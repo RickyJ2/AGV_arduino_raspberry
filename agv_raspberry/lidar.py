@@ -50,8 +50,7 @@ class Lidar:
                         break
                     temp = [0]*360
                     for _, angle, distance in scan:
-                        # +90 is constant offset of the lidar
-                        ang = (math.floor(angle) + 90 + self.arduino.getOrientation()) % 359 
+                        ang = (270 - (math.floor(angle))) % 360 
                         if distance > self.max_distance or distance < self.min_distance:
                             temp[min([359, ang])] = 0
                             continue
