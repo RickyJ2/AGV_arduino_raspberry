@@ -78,10 +78,10 @@ def sendAGVState():
 def main():
     asyncio.set_event_loop(asyncio.new_event_loop())
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
-    try:
-        while True:
-            if not runMainThread:
-                break
+    while True:
+        if not runMainThread:
+            break
+        try:
             #if idle state set new goal and path
             if state == 0:
                 if len(goalPointList) == 0:
@@ -154,8 +154,8 @@ def main():
                 # arduino.send(json.dumps(data))
             elif state == 4:
                 pass
-    except Exception as e:
-        logging.error(f"Main Error: {e}")
+        except Exception as e:
+            logging.error(f"Main Error: {e}")
 
 def errorHandler():
     global runMainThread, mainThread

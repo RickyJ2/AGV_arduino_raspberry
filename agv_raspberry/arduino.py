@@ -76,7 +76,6 @@ class Arduino:
                     logging.info(f"Arduino msg: {msg}")
             except Exception as e:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
-                self.reset()
 
     def send(self, message):
         self.ser.write(bytes(message, 'utf-8'))
