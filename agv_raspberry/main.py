@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from tornado import httpclient
 from client import Client
@@ -10,7 +9,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "192.168.241.180"
+IP = "192.168.0.109"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
@@ -114,21 +113,20 @@ def main():
                 }
                 arduino.send(json.dumps(data))
                 logging.info("current state will 2")
-                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
+                # logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
-                #localization
                 if arduino.statuspoint:
-                    logging.info("reached point main")
                     arduino.statuspoint = False
-                    logging.info("current state will 3")
                     state = 3
+                    logging.info("current state will 3")
                     msg = {
                         "type": "notif",
                         "data": "point"
                     }
-                    client.send(json.dumps(msg))
+                    ioloop.add_callback(client.send, json.dumps(msg))
+                # client.send(json.dumps(msg))
                 # counter = 0
                 # for landmark in targetLandMark:
                 #     temp = lidar.map.getHexByKey(landmark.key())
@@ -144,7 +142,7 @@ def main():
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
-                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
+                # logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 currentCoord = currentTargetPoint
                 logging.info("current state will 1")
                 state = 1
