@@ -9,7 +9,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "192.168.0.109"
+IP = "192.168.241.180"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
