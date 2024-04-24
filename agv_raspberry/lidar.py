@@ -46,23 +46,19 @@ class Lidar:
                 break
             try:
                 for scan in self.lidar.iter_scans():
-                    logging.info(self.arduino.getOrientation())
                     if not self.runThread:
                         break
+                    temp = [0] * 360
                     for _, angle, distance in scan:
                         ang = (270 - (math.floor(angle))) % 360 
-                        robotOrientation = 90 - self.arduino.getOrientation()
-                        if robotOrientation < 90:
-                            ang = (360 + ang - robotOrientation) % 360
-                        else:
-                            ang = (ang + robotOrientation) % 360
                         if distance > self.max_distance: 
-                            self.res_scan[ang] = self.max_distance
+                            temp[ang] = self.max_distance
                             continue
                         elif distance < self.min_distance:
-                            self.res_scan[ang] = 0
+                            temp[ang] = 0
                             continue
-                        self.res_scan[ang] = distance
+                        temp[ang] = distance
+                    self.res_scan = temp
                     self.convertToHex()
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
@@ -74,6 +70,12 @@ class Lidar:
         for i, distance in enumerate(self.res_scan):
             if distance == 0:
                 continue
+            ang = i
+            robotOrientation = 90 - self.arduino.getOrientation()
+            if robotOrientation < 90:
+                ang = (360 + ang - robotOrientation) % 360
+            else:
+                ang = (ang + robotOrientation) % 360
             angle = math.radians(360-i) #need convertion for this formula works
             hexHeight = 350 #in mm
             size = hexHeight/2
@@ -101,3 +103,4 @@ class Lidar:
                 self.lidar.disconnect() 
         except Exception as e:
             logging.error(f"Lidar Error: {e}")
+
