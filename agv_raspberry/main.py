@@ -77,39 +77,6 @@ def sendAGVState():
     }
     client.send(json.dumps(msg))
 
-def lidarScan():
-    while True:
-        if lidar.lidar is None:
-            lidar.connect()
-            continue
-        if not lidar.runThread:
-            break
-        try:
-            for scan in lidar.lidar.iter_scans():
-                temp = [0] * 360
-                if not lidar.runThread:
-                    break
-                for _, angle, distance in scan:
-                    ang = (270 - (math.floor(angle))) % 360 
-                    robotOrientation = 90 - arduino.getOrientation()
-                    if robotOrientation < 90:
-                        ang = (360 + ang - robotOrientation) % 360
-                    else:
-                        ang = (ang + robotOrientation) % 360
-                    if distance > lidar.max_distance: 
-                        temp[ang] = lidar.max_distance
-                        continue
-                    elif distance < lidar.min_distance:
-                        temp[ang] = 0
-                        continue
-                    temp[ang] = distance
-                lidar.res_scan = temp
-                lidar.convertToHex()
-        except RPLidarException as e:
-            logging.error(f"Lidar error: {e}")
-            lidar.lidar.reset()
-            sleep(5)
-
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
     while True:
@@ -218,7 +185,7 @@ if __name__ == "__main__":
     logger.addHandler(consoleHandler)
     logging.info("Program Start")
     try:
-        lidar.start(scan=lidarScan)
+        lidar.start()
         arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
