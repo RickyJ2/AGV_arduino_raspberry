@@ -118,6 +118,7 @@ def main():
             elif state == 2:
                 #collision prediction system and obstacle avoidance
                 #localization
+                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 if arduino.statuspoint:
                     logging.info("reached point main")
                     arduino.statuspoint = False
