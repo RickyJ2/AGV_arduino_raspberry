@@ -11,6 +11,7 @@ class Lidar:
         self.port = port
         self.lidar = None
         self.map = Map()
+        self.res_scan = [] * 360
         #in mm
         self.max_distance = 5000
         self.min_distance = 0
@@ -49,11 +50,13 @@ class Lidar:
                         break
                     temp = [0]*360
                     for _, angle, distance in scan:
-                        ang = (math.floor(angle) + self.arduino.getOrientation()) % 359 
+                        # +90 is constant offset of the lidar
+                        ang = (math.floor(angle) + 90 + self.arduino.getOrientation()) % 359 
                         if distance > self.max_distance or distance < self.min_distance:
                             temp[min([359, ang])] = 0
                             continue
                         temp[min([359,ang])] = distance
+                    self.res_scan = temp
                     self.convertToHex(temp)
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
