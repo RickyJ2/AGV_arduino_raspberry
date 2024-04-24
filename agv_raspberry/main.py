@@ -10,7 +10,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "10.53.10.199"
+IP = "192.168.241.180"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
@@ -76,7 +76,6 @@ def sendAGVState():
     client.send(json.dumps(msg))
 
 def main():
-    asyncio.set_event_loop(asyncio.new_event_loop())
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
     while True:
         if not runMainThread:

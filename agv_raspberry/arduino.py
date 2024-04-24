@@ -23,21 +23,14 @@ class Arduino:
     
     def connect(self):
         try:
-            self.ser = serial.Serial(self.port, self.baudrate, timeout=1, dsrdtr=True, rtscts=True)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
             sleep(3)
-            self.reset()
+            self.ser.reset_input_buffer()
+            self.ser.reset_output_buffer()
             logging.info("Arduino connected")
         except serial.SerialException as e:
             logging.error(f"Arduino's connection Failed: {e}")
             sleep(5)
-
-    def reset(self):
-        self.ser.dtr = False
-        sleep(3)
-        self.ser.reset_input_buffer()
-        self.ser.reset_output_buffer()
-        self.ser.dtr = True
-        logging.info("Arduino reset")
 
     def start(self):
         self.runThread = True
