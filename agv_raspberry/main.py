@@ -114,11 +114,11 @@ def main():
                 }
                 arduino.send(json.dumps(data))
                 logging.info("current state will 2")
+                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
                 #localization
-                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 if arduino.statuspoint:
                     logging.info("reached point main")
                     arduino.statuspoint = False
@@ -144,6 +144,7 @@ def main():
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
+                logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 currentCoord = currentTargetPoint
                 logging.info("current state will 1")
                 state = 1
