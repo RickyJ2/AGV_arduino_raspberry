@@ -86,6 +86,7 @@ def lidarScan():
             break
         try:
             for scan in lidar.lidar.iter_scans():
+                temp = [0] * 360
                 if not lidar.runThread:
                     break
                 for _, angle, distance in scan:
@@ -96,12 +97,13 @@ def lidarScan():
                     else:
                         ang = (ang + robotOrientation) % 360
                     if distance > lidar.max_distance: 
-                        lidar.res_scan[ang] = lidar.max_distance
+                        temp[ang] = lidar.max_distance
                         continue
                     elif distance < lidar.min_distance:
-                        lidar.res_scan[ang] = 0
+                        temp[ang] = 0
                         continue
-                    lidar.res_scan[ang] = distance
+                    temp[ang] = distance
+                lidar.res_scan = temp
                 lidar.convertToHex()
         except RPLidarException as e:
             logging.error(f"Lidar error: {e}")

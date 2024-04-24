@@ -37,37 +37,6 @@ class Lidar:
         self.thread = threading.Thread(target=scan, name="Lidar", daemon=True)
         self.thread.start()
 
-    def _scan(self):
-        while True:
-            if self.lidar is None:
-                self.connect()
-                continue
-            if not self.runThread:
-                break
-            try:
-                for scan in self.lidar.iter_scans():
-                    if not self.runThread:
-                        break
-                    for _, angle, distance in scan:
-                        ang = (270 - (math.floor(angle))) % 360 
-                        robotOrientation = 90 - self.arduino.getOrientation()
-                        if robotOrientation < 90:
-                            ang = (360 + ang - robotOrientation) % 360
-                        else:
-                            ang = (ang + robotOrientation) % 360
-                        if distance > self.max_distance: 
-                            self.res_scan[ang] = self.max_distance
-                            continue
-                        elif distance < self.min_distance:
-                            self.res_scan[ang] = 0
-                            continue
-                        self.res_scan[ang] = distance
-                    self.convertToHex()
-            except RPLidarException as e:
-                logging.error(f"Lidar error: {e}")
-                self.lidar.reset()
-                sleep(5)
-
     def convertToHex(self):
         self.map.clearMap()
         for i, distance in enumerate(self.res_scan):
