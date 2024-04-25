@@ -188,6 +188,7 @@ if __name__ == "__main__":
     try:
         lidar.start()
         arduino.start()
+        sleep(5)
         client.connect(clientOnMsg)
         runMainThread = True
         mainThread = threading.Thread(target=main,name="main", daemon=True)
