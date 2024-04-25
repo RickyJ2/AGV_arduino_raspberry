@@ -52,7 +52,7 @@ class Arduino:
                 msg = json.loads(buffer, strict=False)
                 if(msg["type"] == "state"):
                     data = msg["data"]
-                    logging.info(f"arduino state {data}")
+                    # logging.info(f"arduino state {data}")
                     self.container = data['container']
                     self.collision = data['collision']
                     self.orientation = data['orientation']
