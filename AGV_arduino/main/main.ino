@@ -18,6 +18,7 @@ float targetAngle = 90;
 bool isDriving = false;
 unsigned long previousMillis = 0;
 unsigned long totalTime = 0;
+unsigned int duration = 0;
 
 void setup() {
   motor.init();
@@ -71,6 +72,7 @@ void loop() {
     String type = input["type"];
     if(type == "direction"){
       int dir = input["direction"];
+      duration = input["duration"];
       targetAngle = dir;
       isDriving = true;
       previousMillis = currentMillis;
@@ -97,7 +99,7 @@ void loop() {
       info["data"] = "driving";
       serializeJson(info, Serial);
       Serial.println();
-      if(totalTime >= 1400){
+      if(totalTime >= duration){
         motor.stop();
         isDriving = false;
         JsonDocument notif;

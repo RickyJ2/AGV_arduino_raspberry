@@ -1,5 +1,4 @@
 import logging
-import math
 from time import sleep
 from tornado import httpclient
 from client import Client
@@ -124,7 +123,8 @@ def main():
                 previousDistance = lidar.getFront()
                 data = {
                     "type": "direction",
-                    "direction": dir
+                    "direction": dir,
+                    "duration": 1400
                 }
                 arduino.send(json.dumps(data))
                 logging.info("current state will 2")

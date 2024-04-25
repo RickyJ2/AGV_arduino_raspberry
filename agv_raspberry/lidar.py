@@ -105,6 +105,18 @@ class Lidar:
         if total == 0:
             return 0
         return total / count
+
+    def getBack(self):
+        total = 0
+        count = 0
+        for i in range(260, 280):
+            if self.res_scan[i] == 0:
+                continue
+            total += self.res_scan[i]
+            count += 1
+        if total == 0:
+            return 0
+        return total / count
         
     def stop(self):
         try:
