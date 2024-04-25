@@ -48,24 +48,24 @@ class Lidar:
                 for scan in self.lidar.iter_scans():
                     if not self.runThread:
                         break
-                    temp = [0]*360
                     for _, angle, distance in scan:
                         ang = (270 - (math.floor(angle))) % 360 
-                        if distance > self.max_distance or distance < self.min_distance:
-                            temp[min([359, ang])] = 0
+                        if distance > self.max_distance: 
+                            self.res_scan[min([359, ang])] = self.max_distance
                             continue
-                        temp[min([359,ang])] = distance
-                    self.res_scan = temp
-                    self.convertToHex(temp)
+                        elif distance < self.min_distance:
+                            self.res_scan[min([359, ang])] = 0
+                            continue
+                        self.res_scan[min([359,ang])] = distance
+                    self.convertToHex()
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
                 sleep(5)
 
-    def convertToHex(self, scan_data):
+    def convertToHex(self):
         self.map.clearMap()
-        # print("======================================")
-        for i, distance in enumerate(scan_data):
+        for i, distance in enumerate(self.res_scan):
             if distance == 0:
                 continue
             angle = math.radians(i)
