@@ -58,10 +58,19 @@ def clientOnMsg(msg):
         global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
         pathList.append(msg["data"]["path"])
+    elif msg["type"] == "new path":
+        global state,pathList, goalPointList
+        pathList.pop(0)
+        #insert on index 0
+        pathList.insert(0, msg["data"]["path"])
+        logging.info("current state will 1")
+        state = 1
     elif msg["type"] == "stop":
-        global state
-        logging.info("current state will 3")
-        state = 3
+        global state, goalPointList, pathList
+        goalPointList = []
+        pathList = []
+        logging.info("current state will 0")
+        state = 0
 
 def sendAGVState():
     msg = {
@@ -120,6 +129,19 @@ def main():
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
+                if lidar.frontDistance < 0.3:
+                    msg = {
+                        "type": "cmd",
+                        "cmd": "stop"
+                    }
+                    arduino.send(json.dumps(msg))
+                    msg = {
+                        "type": "collision",
+                        "data": lidar.getLocalMap()
+                    }
+                    ioloop.add_callback(client.send, json.dumps(msg))
+                    logging.info("current state will 4")
+                    state = 4
                 if arduino.statuspoint:
                     arduino.statuspoint = False
                     state = 3
