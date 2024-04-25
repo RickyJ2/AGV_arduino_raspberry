@@ -10,7 +10,7 @@ MotorDriver motor(6,7,8,9,10,11);
 Proximity container(5);
 LimitSwitch uppperBumper(12);
 LimitSwitch bellowBumper(13);
-Kompas imu(4); 
+Kompas imu(2); 
 VoltageReader powerbank(A2, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
 //AGV State

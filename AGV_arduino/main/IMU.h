@@ -29,14 +29,14 @@ class Kompas{
     float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
   public:
-    Kompas(int int_pin = 4){
+    Kompas(int int_pin = 2){
       interrupt_pin = int_pin;
     }
 
     void init(){
       // Untuk menginisialisasi Kompas
       Wire.begin();
-      Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+//      Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
 
       compass.initialize();
       pinMode(this->interrupt_pin, INPUT);
@@ -45,13 +45,13 @@ class Kompas{
       testConnection();
 
       //Change with sensor's offset value
-      //id 01 [-2275,-2274] --> [-12,5]  [-787,-786] --> [-6,12] [1091,1092] --> [16368,16386] [-233,-232] --> [-2,1]  [-211,-210] --> [0,2] [-53,-52] --> [0,3]
-      compass.setXGyroOffset(-2274);
-      compass.setYGyroOffset(-787);
-      compass.setZGyroOffset(1091);
-      compass.setXAccelOffset(-232);
-      compass.setYAccelOffset(-211);
-      compass.setZAccelOffset(-53);
+      //ID 01 [-2273,-2273] --> [0,17]  [-822,-821] --> [-20,3] [1105,1105] --> [16382,16389] [-243,-242] --> [-2,2]  [-211,-211] --> [0,1] [-49,-48] --> [0,2]
+      compass.setXGyroOffset(-2273);
+      compass.setYGyroOffset(-821);
+      compass.setZGyroOffset(1105);
+      compass.setXAccelOffset(-16389);
+      compass.setYAccelOffset(-2);
+      compass.setZAccelOffset(-49);
       //id 02 [697,698] --> [-11,8]  [-115,-114] --> [-12,5] [189,190] --> [16365,16385] [113,113] --> [0,1] [-35,-34] --> [-2,1]  [2,3] --> [0,4]
 //      compass.setXGyroOffset(698);
 //      compass.setYGyroOffset(-114);

@@ -46,26 +46,23 @@ request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 
 def clientOnMsg(msg):
+    global state, pathList, goalPointList, globalCoordinate
     if msg is None:
         return
     msg = json.loads(msg)
     logging.info(msg)
     if msg["type"] == "position":
-        global globalCoordinate
         globalCoordinate = Hex(msg["data"]["x"],msg["data"]["y"])
     elif msg["type"] == "path":
-        global pathList, goalPointList
         goalPointList.append(msg["data"]["goal"])
         pathList.append(msg["data"]["path"])
     elif msg["type"] == "new path":
-        global state,pathList, goalPointList
         pathList.pop(0)
         #insert on index 0
         pathList.insert(0, msg["data"]["path"])
         logging.info("current state will 1")
         state = 1
     elif msg["type"] == "stop":
-        global state, goalPointList, pathList
         goalPointList = []
         pathList = []
         logging.info("current state will 0")
