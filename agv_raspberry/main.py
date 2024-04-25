@@ -24,7 +24,6 @@ currentPath = []
 currentTargetPoint = None
 currentCoord = Hex(0,0)
 currentDir = 0
-targetLandMark = []
 # 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
 globalCoordinate = Hex(0,0)
 state = 0
@@ -87,11 +86,10 @@ def sendAGVState():
     client.send(json.dumps(msg))
 
 def main():
-    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir, previousDistance
+    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
     while True:
         if not runMainThread:
             break
-        # logging.info(lidar.getFront())
         try:
             #if idle state set new goal and path
             if state == 0:
@@ -113,11 +111,8 @@ def main():
                     continue
                 #transition to new point in path
                 point = currentPath.pop(0)
-                targetLandMark = lidar.map.getObstacles()
                 currentTargetPoint = Hex(point[0],point[1])
                 currentDir = findDirection(currentTargetPoint - currentCoord)
-                for i in range(len(targetLandMark)):
-                    targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
                 dir = currentDir * 60
                 logging.info(f"target: {dir}")
                 previousDistance = lidar.getFront()
@@ -128,7 +123,6 @@ def main():
                 }
                 arduino.send(json.dumps(data))
                 logging.info("current state will 2")
-                # logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
@@ -155,31 +149,12 @@ def main():
                     }
                     ioloop.add_callback(client.send, json.dumps(msg))
                     logging.info(f"distance: {lidar.getFront() - previousDistance}")
-                # client.send(json.dumps(msg))
-                # counter = 0
-                # for landmark in targetLandMark:
-                #     temp = lidar.map.getHexByKey(landmark.key())
-                #     if temp is not None:
-                #         if temp.walkable == False:
-                #             counter += 1
-                # if counter/len(targetLandMark) > 0.9:
-                #     msg = {
-                #         "type": "notif",
-                #         "data": "point"
-                #     }
-                #     client.send(json.dumps(msg))
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
-                # logging.info(f"front distance {lidar.res_scan[90]}, back distance {lidar.res_scan[270]}")
                 currentCoord = currentTargetPoint
                 logging.info("current state will 1")
                 state = 1
-                # data = {
-                #     "type": "cmd",
-                #     "cmd": "stop"
-                # }
-                # arduino.send(json.dumps(data))
             elif state == 4:
                 pass
         except Exception as e:
