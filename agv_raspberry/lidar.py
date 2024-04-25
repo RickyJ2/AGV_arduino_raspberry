@@ -32,9 +32,9 @@ class Lidar:
             logging.error(f"Lidar connection failed: {e}")
             sleep(5)
         
-    def start(self):
+    def start(self, scan):
         self.runThread = True
-        self.thread = threading.Thread(target=self._scan, name="Lidar", daemon=True)
+        self.thread = threading.Thread(target=scan, name="Lidar", daemon=True)
         self.thread.start()
 
     def _scan(self):
@@ -50,6 +50,11 @@ class Lidar:
                         break
                     for _, angle, distance in scan:
                         ang = (270 - (math.floor(angle))) % 360 
+                        robotOrientation = 90 - self.arduino.getOrientation()
+                        if robotOrientation < 90:
+                            ang = (360 + ang - robotOrientation) % 360
+                        else:
+                            ang = (ang + robotOrientation) % 360
                         if distance > self.max_distance: 
                             self.res_scan[ang] = self.max_distance
                             continue
@@ -68,7 +73,7 @@ class Lidar:
         for i, distance in enumerate(self.res_scan):
             if distance == 0:
                 continue
-            angle = math.radians(360-i)
+            angle = math.radians(360-i) #need convertion for this formula works
             hexHeight = 350 #in mm
             size = hexHeight/2
             x = distance * math.cos(angle)

@@ -1,4 +1,6 @@
 import logging
+import math
+from time import sleep
 from tornado import httpclient
 from client import Client
 from arduino import Arduino
@@ -6,6 +8,7 @@ from lidar import Lidar
 import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
+from adafruit_rplidar import RPLidarException
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
@@ -73,6 +76,37 @@ def sendAGVState():
         }
     }
     client.send(json.dumps(msg))
+
+def lidarScan():
+    while True:
+        if lidar.lidar is None:
+            lidar.connect()
+            continue
+        if not lidar.runThread:
+            break
+        try:
+            for scan in lidar.lidar.iter_scans():
+                if not lidar.runThread:
+                    break
+                for _, angle, distance in scan:
+                    ang = (270 - (math.floor(angle))) % 360 
+                    robotOrientation = 90 - arduino.getOrientation()
+                    if robotOrientation < 90:
+                        ang = (360 + ang - robotOrientation) % 360
+                    else:
+                        ang = (ang + robotOrientation) % 360
+                    if distance > lidar.max_distance: 
+                        lidar.res_scan[ang] = lidar.max_distance
+                        continue
+                    elif distance < lidar.min_distance:
+                        lidar.res_scan[ang] = 0
+                        continue
+                    lidar.res_scan[ang] = distance
+                lidar.convertToHex()
+        except RPLidarException as e:
+            logging.error(f"Lidar error: {e}")
+            lidar.lidar.reset()
+            sleep(5)
 
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
@@ -182,7 +216,7 @@ if __name__ == "__main__":
     logger.addHandler(consoleHandler)
     logging.info("Program Start")
     try:
-        lidar.start()
+        lidar.start(scan=lidarScan)
         arduino.start()
         client.connect(clientOnMsg)
         runMainThread = True
