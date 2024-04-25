@@ -12,7 +12,7 @@ from adafruit_rplidar import RPLidarException
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "10.53.12.19"
+IP = "192.168.241.180"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
@@ -29,6 +29,7 @@ targetLandMark = []
 # 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
 globalCoordinate = Hex(0,0)
 state = 0
+previousDistance = 0
 runMainThread = False
 mainThread = None
 ioloop = IOLoop.current()
@@ -87,10 +88,11 @@ def sendAGVState():
     client.send(json.dumps(msg))
 
 def main():
-    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir
+    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, targetLandMark, currentDir, previousDistance
     while True:
         if not runMainThread:
             break
+        # logging.info(lidar.getFront())
         try:
             #if idle state set new goal and path
             if state == 0:
@@ -119,6 +121,7 @@ def main():
                     targetLandMark[i] = targetLandMark[i] -  hexDirections[currentDir]
                 dir = currentDir * 60
                 logging.info(f"target: {dir}")
+                previousDistance = lidar.getFront()
                 data = {
                     "type": "direction",
                     "direction": dir
@@ -151,6 +154,7 @@ def main():
                         "data": "point"
                     }
                     ioloop.add_callback(client.send, json.dumps(msg))
+                    logging.info(f"distance: {lidar.getFront() - previousDistance}")
                 # client.send(json.dumps(msg))
                 # counter = 0
                 # for landmark in targetLandMark:

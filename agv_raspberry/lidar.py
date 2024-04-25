@@ -93,6 +93,18 @@ class Lidar:
         for i in range(len(obstacles)):
             obstacles[i] = {'x': obstacles[i].q, 'y': obstacles[i].r}
         return obstacles
+    
+    def getFront(self):
+        total = 0
+        count = 0
+        for i in range(80, 100):
+            if self.res_scan[i] == 0:
+                continue
+            total += self.res_scan[i]
+            count += 1
+        if total == 0:
+            return 0
+        return total / count
         
     def stop(self):
         try:
