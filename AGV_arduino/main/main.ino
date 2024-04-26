@@ -9,7 +9,7 @@
 MotorDriver motor(6,7,8,9,10,11);
 Proximity container(5);
 LimitSwitch uppperBumper(12);
-LimitSwitch bellowBumper(13);
+//LimitSwitch bellowBumper(13);
 Kompas imu(2); 
 VoltageReader powerbank(A2, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
@@ -17,17 +17,18 @@ VoltageReader battery(A3, 7.2, 8.28);
 float targetAngle = 90;
 bool isDriving = false;
 unsigned long previousMillis = 0;
+unsigned long previousMainMillis = 0;
 unsigned long totalTime = 0;
 unsigned int duration = 0;
-int count = 0;
 
 void setup() {
   motor.init();
-  motor.setLeftSpeed(230);
+//  motor.setLeftSpeed(230);
+  motor.setLeftSpeed(200);
   motor.setRightSpeed(250);
   container.init();
   uppperBumper.init();
-  bellowBumper.init();
+//  bellowBumper.init();
   imu.init();
   powerbank.init();
   battery.init();
@@ -43,7 +44,7 @@ void loop() {
   unsigned long currentSecond = currentMillis/1000;
   container.updateState(currentSecond);
   uppperBumper.updateState();
-  bellowBumper.updateState();
+//  bellowBumper.updateState();
   imu.updateState();
   powerbank.updateState();
   battery.updateState();
@@ -51,11 +52,12 @@ void loop() {
   float orientation = imu.getOrientation();
 //  Serial.println("update selesai");
   //Send to raspberry
-  if(count >= 20){
+  if( currentMillis - previousMainMillis > 500 ){
     JsonDocument data;
     data["type"] = "state";
     data["data"]["container"] = container.getState();
-    data["data"]["collision"] = uppperBumper.getState() || bellowBumper.getState();
+//    data["data"]["collision"] = uppperBumper.getState() || bellowBumper.getState();
+    data["data"]["collision"] = uppperBumper.getState();
     data["data"]["orientation"] = orientation;
     data["data"]["acceleration"]["x"] = acceleration.x;
     data["data"]["acceleration"]["y"] = acceleration.y;
@@ -67,9 +69,7 @@ void loop() {
     }
     serializeJson(data, Serial);
     Serial.println();
-    count = 0;
-  }else{
-    count++;
+    previousMainMillis = currentMillis;
   }
   
 
@@ -106,7 +106,7 @@ void loop() {
       }
     }
   }
-  if(uppperBumper.getState() || bellowBumper.getState()){
+  if(uppperBumper.getState()){
     motor.stop();
   }else if(isDriving){
     int delta = orientation - targetAngle;

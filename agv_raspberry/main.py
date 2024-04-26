@@ -11,11 +11,11 @@ from adafruit_rplidar import RPLidarException
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "192.168.241.180"
+IP = "192.168.71.180"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
-    'id':'2'
+    'id':'1'
 }
 goalPointList = []
 pathList = []
