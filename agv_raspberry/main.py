@@ -15,7 +15,7 @@ IP = "192.168.241.180"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
-    'id':'1'
+    'id':'2'
 }
 goalPointList = []
 pathList = []

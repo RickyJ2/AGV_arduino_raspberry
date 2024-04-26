@@ -9,7 +9,7 @@
 MotorDriver motor(6,7,8,9,10,11);
 Proximity container(5);
 LimitSwitch uppperBumper(12);
-//LimitSwitch bellowBumper(13);
+LimitSwitch bellowBumper(13);
 Kompas imu(2); 
 VoltageReader powerbank(A2, 7.5, 8.3);
 VoltageReader battery(A3, 7.2, 8.28);
@@ -23,11 +23,11 @@ int count = 0;
 
 void setup() {
   motor.init();
-  motor.setLeftSpeed(190);
+  motor.setLeftSpeed(230);
   motor.setRightSpeed(250);
   container.init();
   uppperBumper.init();
-//  bellowBumper.init();
+  bellowBumper.init();
   imu.init();
   powerbank.init();
   battery.init();
@@ -35,25 +35,27 @@ void setup() {
 }
 
 void loop() {
-  JsonDocument info;
-  info["type"] = "info";
+//  Serial.println("updating");
+//  JsonDocument info;
+//  info["type"] = "info";
   //Update all sensor data
   unsigned long currentMillis = millis();
   unsigned long currentSecond = currentMillis/1000;
   container.updateState(currentSecond);
   uppperBumper.updateState();
-//  bellowBumper.updateState();
+  bellowBumper.updateState();
   imu.updateState();
   powerbank.updateState();
   battery.updateState();
   vec3_t acceleration = imu.getAcceleration();
   float orientation = imu.getOrientation();
+//  Serial.println("update selesai");
   //Send to raspberry
   if(count >= 20){
     JsonDocument data;
     data["type"] = "state";
     data["data"]["container"] = container.getState();
-    data["data"]["collision"] = uppperBumper.getState();
+    data["data"]["collision"] = uppperBumper.getState() || bellowBumper.getState();
     data["data"]["orientation"] = orientation;
     data["data"]["acceleration"]["x"] = acceleration.x;
     data["data"]["acceleration"]["y"] = acceleration.y;
@@ -74,20 +76,28 @@ void loop() {
   if(Serial.available() > 0){
     //read via serial monitor
     // String cmd = Serial.readStringUntil('\n');
+//    Serial.println("Ada pesan");
     JsonDocument input;
     deserializeJson(input, Serial);
     String type = input["type"];
+//    Serial.print("type : ");
+//    Serial.println(type);
     if(type == "direction"){
+//      Serial.println("masuk");
       int dir = input["direction"];
       int dur = input["duration"];
+//      Serial.print("dur : ");
+//      Serial.println(dur);
       targetAngle = dir;
       duration = dur;
       isDriving = true;
       previousMillis = currentMillis;
       totalTime = 0;
-      info["data"] = "received direction";
-      serializeJson(info, Serial);
-      Serial.println();
+//      Serial.print("dura : ");
+//      Serial.println(duration);
+//      info["data"] = "received direction";
+//      serializeJson(info, Serial);
+//      Serial.println();
     }else if(type == "cmd"){
       String cmd = input["cmd"];
       if(cmd == "stop"){
@@ -96,7 +106,7 @@ void loop() {
       }
     }
   }
-  if(uppperBumper.getState()){
+  if(uppperBumper.getState() || bellowBumper.getState()){
     motor.stop();
   }else if(isDriving){
     int delta = orientation - targetAngle;
