@@ -79,9 +79,9 @@ void loop() {
     String type = input["type"];
     if(type == "direction"){
       int dir = input["direction"];
-//      int dur = input["duration"];
+      int dur = input["duration"];
       targetAngle = dir;
-//      duration = dur;
+      duration = dur;
       isDriving = true;
       previousMillis = currentMillis;
       totalTime = 0;
@@ -104,7 +104,7 @@ void loop() {
     if(abs(delta) < 3 || delta > 360 - 3){
       motor.forward();
       totalTime += currentMillis - previousMillis;
-      if(totalTime >= 1400){
+      if(totalTime >= duration){
         motor.stop();
         isDriving = false;
         JsonDocument notif;
