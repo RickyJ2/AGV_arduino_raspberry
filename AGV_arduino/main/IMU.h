@@ -52,13 +52,13 @@ class Kompas{
       compass.setXAccelOffset(-16389);
       compass.setYAccelOffset(-2);
       compass.setZAccelOffset(-49);
-      //id 02 [697,698] --> [-11,8]  [-115,-114] --> [-12,5] [189,190] --> [16365,16385] [113,113] --> [0,1] [-35,-34] --> [-2,1]  [2,3] --> [0,4]
-//      compass.setXGyroOffset(698);
-//      compass.setYGyroOffset(-114);
-//      compass.setZGyroOffset(189);
-//      compass.setXAccelOffset(113);
-//      compass.setYAccelOffset(-34);
-//      compass.setZAccelOffset(2);
+      //ID 02 [677,678] --> [-4,10]  [-113,-113] --> [-3,16] [193,194] --> [16381,16401] [119,120] --> [-2,1]  [-32,-31] --> [0,3] [3,4] --> [-2,1]
+//      compass.setXGyroOffset(677);
+//      compass.setYGyroOffset(-113);
+//      compass.setZGyroOffset(193);
+//      compass.setXAccelOffset(120);
+//      compass.setYAccelOffset(-32);
+//      compass.setZAccelOffset(4);
       compass.CalibrateGyro(6);
       devStatus = compass.dmpInitialize();
       if (devStatus == 0) {

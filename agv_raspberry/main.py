@@ -11,7 +11,7 @@ from adafruit_rplidar import RPLidarException
 from hex import Hex, findDirection, hexDirections
 import serial.tools.list_ports
 
-IP = "10.53.15.169"
+IP = "10.52.5.114"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
@@ -123,19 +123,21 @@ def main():
                 state = 2
             elif state == 2:
                 #collision prediction system and obstacle avoidance
-                if lidar.frontDistance < 0.3:
-                    msg = {
-                        "type": "cmd",
-                        "cmd": "stop"
-                    }
-                    arduino.send(json.dumps(msg))
-                    msg = {
-                        "type": "collision",
-                        "data": lidar.getLocalMap()
-                    }
-                    ioloop.add_callback(client.send, json.dumps(msg))
-                    logging.info("current state will 4")
-                    state = 4
+                # if lidar.getFront() < 0.3:
+                #     msg = {
+                #         "type": "cmd",
+                #         "cmd": "stop"
+                #     }
+                #     arduino.send(json.dumps(msg))
+                #     msg = {
+                #         "type": "collision",
+                #         "data": {
+                #             "localMap": lidar.getLocalMap()
+                #         }
+                #     }
+                #     ioloop.add_callback(client.send, json.dumps(msg))
+                #     logging.info("current state will 4")
+                #     state = 4
                 if arduino.statuspoint:
                     arduino.statuspoint = False
                     state = 3
@@ -185,7 +187,7 @@ if __name__ == "__main__":
     try:
         lidar.start()
         arduino.start()
-        sleep(5)
+        sleep(10)
         client.connect(clientOnMsg)
         runMainThread = True
         mainThread = threading.Thread(target=main,name="main", daemon=True)
