@@ -59,7 +59,7 @@ class Kompas{
 //      compass.setXAccelOffset(120);
 //      compass.setYAccelOffset(-32);
 //      compass.setZAccelOffset(4);
-      compass.CalibrateGyro(6);
+//      compass.CalibrateGyro(6);
       devStatus = compass.dmpInitialize();
       if (devStatus == 0) {
         compass.CalibrateAccel(6);

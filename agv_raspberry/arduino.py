@@ -23,8 +23,9 @@ class Arduino:
     
     def connect(self):
         try:
-            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=5)
             sleep(3)
+            logging.info("Reseting Arduino")
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
             logging.info("Arduino connected")
@@ -52,7 +53,7 @@ class Arduino:
                 msg = json.loads(buffer, strict=False)
                 if(msg["type"] == "state"):
                     data = msg["data"]
-                    # logging.info(f"arduino state {data}")
+                    logging.info(f"arduino state {data}")
                     self.container = data['container']
                     self.collision = data['collision']
                     self.orientation = data['orientation']
@@ -69,10 +70,16 @@ class Arduino:
                     logging.info(f"Arduino msg: {msg}")
             except Exception as e:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
+                if not self.ser.is_open:
+                    self.connect()
 
     def send(self, message):
-        logging.info(f"send arduino msg: {message}")
-        self.ser.write(bytes(message, 'utf-8'))
+        try:
+            logging.info(f"send arduino msg: {message}")
+            self.ser.write(bytes(message, 'utf-8'))
+        except Exception as e:
+            logging.error(f"Arduino send error: {e}")
+
 
     def close(self):
         try:

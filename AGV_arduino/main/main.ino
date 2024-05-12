@@ -17,13 +17,14 @@ VoltageReader battery(A3, 7.2, 8.28);
 float targetAngle = 90;
 bool isDriving = false;
 unsigned long previousMillis = 0;
+unsigned long previousMainMillis = 0;
 unsigned long totalTime = 0;
 unsigned int duration = 0;
-int count = 0;
 
 void setup() {
   motor.init();
-  motor.setLeftSpeed(190);
+//  motor.setLeftSpeed(230);
+  motor.setLeftSpeed(200);
   motor.setRightSpeed(250);
   container.init();
   uppperBumper.init();
@@ -35,8 +36,9 @@ void setup() {
 }
 
 void loop() {
-  JsonDocument info;
-  info["type"] = "info";
+//  Serial.println("updating");
+//  JsonDocument info;
+//  info["type"] = "info";
   //Update all sensor data
   unsigned long currentMillis = millis();
   unsigned long currentSecond = currentMillis/1000;
@@ -48,11 +50,13 @@ void loop() {
   battery.updateState();
   vec3_t acceleration = imu.getAcceleration();
   float orientation = imu.getOrientation();
+//  Serial.println("update selesai");
   //Send to raspberry
-  if(count >= 20){
+  if( currentMillis - previousMainMillis > 500 ){
     JsonDocument data;
     data["type"] = "state";
     data["data"]["container"] = container.getState();
+//    data["data"]["collision"] = uppperBumper.getState() || bellowBumper.getState();
     data["data"]["collision"] = uppperBumper.getState();
     data["data"]["orientation"] = orientation;
     data["data"]["acceleration"]["x"] = acceleration.x;
@@ -65,29 +69,35 @@ void loop() {
     }
     serializeJson(data, Serial);
     Serial.println();
-    count = 0;
-  }else{
-    count++;
+    previousMainMillis = currentMillis;
   }
   
 
   if(Serial.available() > 0){
     //read via serial monitor
     // String cmd = Serial.readStringUntil('\n');
+//    Serial.println("Ada pesan");
     JsonDocument input;
     deserializeJson(input, Serial);
     String type = input["type"];
+//    Serial.print("type : ");
+//    Serial.println(type);
     if(type == "direction"){
+//      Serial.println("masuk");
       int dir = input["direction"];
-//      int dur = input["duration"];
+      int dur = input["duration"];
+//      Serial.print("dur : ");
+//      Serial.println(dur);
       targetAngle = dir;
-//      duration = dur;
+      duration = dur;
       isDriving = true;
       previousMillis = currentMillis;
       totalTime = 0;
-      info["data"] = "received direction";
-      serializeJson(info, Serial);
-      Serial.println();
+//      Serial.print("dura : ");
+//      Serial.println(duration);
+//      info["data"] = "received direction";
+//      serializeJson(info, Serial);
+//      Serial.println();
     }else if(type == "cmd"){
       String cmd = input["cmd"];
       if(cmd == "stop"){
@@ -104,7 +114,7 @@ void loop() {
     if(abs(delta) < 3 || delta > 360 - 3){
       motor.forward();
       totalTime += currentMillis - previousMillis;
-      if(totalTime >= 1400){
+      if(totalTime >= duration){
         motor.stop();
         isDriving = false;
         JsonDocument notif;
