@@ -59,6 +59,7 @@ class Lidar:
                         temp[ang] = distance
                     self.res_scan = temp
                     self.convertToHex()
+                    sleep(0.1)
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()

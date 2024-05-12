@@ -122,22 +122,6 @@ def main():
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
-                #collision prediction system and obstacle avoidance
-                # if lidar.getFront() < 0.3:
-                #     msg = {
-                #         "type": "cmd",
-                #         "cmd": "stop"
-                #     }
-                #     arduino.send(json.dumps(msg))
-                #     msg = {
-                #         "type": "collision",
-                #         "data": {
-                #             "localMap": lidar.getLocalMap()
-                #         }
-                #     }
-                #     ioloop.add_callback(client.send, json.dumps(msg))
-                #     logging.info("current state will 4")
-                #     state = 4
                 if arduino.statuspoint:
                     arduino.statuspoint = False
                     state = 3

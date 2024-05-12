@@ -47,6 +47,7 @@ class Arduino:
                 break
             buffer = ''
             if not (self.ser.in_waiting > 0):
+                sleep(0.1)
                 continue
             try:
                 buffer = self.ser.readline().decode("utf-8")
