@@ -41,7 +41,7 @@ for p in ports:
     else:   
         lidarPort = p.device
 arduino = Arduino(port=arduinoPort)
-lidar = Lidar(arduino=arduino, port=lidarPort)
+lidar = Lidar(port=lidarPort)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 

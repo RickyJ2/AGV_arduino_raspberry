@@ -7,7 +7,7 @@ from map import Map
 from hex import cubeRound
 
 class Lidar:
-    def __init__(self, arduino, port = '/dev/ttyUSB1'):
+    def __init__(self, port = '/dev/ttyUSB1'):
         self.port = port
         self.lidar = None
         self.map = Map()
@@ -15,7 +15,6 @@ class Lidar:
         #in mm
         self.max_distance = 5000
         self.min_distance = 0
-        self.arduino = arduino
     
     def checkHealth(self):
         if self.lidar.health[1] == 0 : 
@@ -71,11 +70,6 @@ class Lidar:
             if distance == 0:
                 continue
             ang = i
-            robotOrientation = 90 - self.arduino.getOrientation()
-            if robotOrientation < 90:
-                ang = (360 + ang - robotOrientation) % 360
-            else:
-                ang = (ang + robotOrientation) % 360
             angle = math.radians(360-i) #need convertion for this formula works
             hexHeight = 350 #in mm
             size = hexHeight/2
