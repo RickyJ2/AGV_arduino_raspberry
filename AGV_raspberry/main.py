@@ -109,15 +109,24 @@ def main():
                 state = 2
             elif state == 2:
                 if dir == 0:
+                    firstTime = True
                     while distance(lidar.getPos(), previousPos) < 350:
-                        arduino.moveForward()
+                        if firstTime:
+                            arduino.moveForward()
+                            firstTime = False
                     arduino.stop()
                 elif dir != 0:
+                    firstTime = True
                     while lidar.getPos()[2] != dir:
-                        arduino.moveRight()
+                        if firstTime:
+                            arduino.moveLeft()
+                            firstTime = False
                     arduino.stop()
+                    firstTime = True
                     while distance(lidar.getPos(), previousPos) < 350:
-                        arduino.moveForward()
+                        if firstTime:
+                            arduino.moveForward()
+                            firstTime = False
                     arduino.stop()
                 else:
                     arduino.stop()
