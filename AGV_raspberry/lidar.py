@@ -4,17 +4,19 @@ from time import sleep
 from adafruit_rplidar import RPLidar, RPLidarException
 import threading
 from map import Map
-from hex import cubeRound
+from hex import HexRound, PolarToAxial
+import serial.tools.list_ports
 
 class Lidar:
-    def __init__(self, port = '/dev/ttyUSB1'):
-        self.port = port
+    def __init__(self, slam):
+        self.port = None
         self.lidar = None
         self.map = Map()
-        self.res_scan = [0] * 360
+        self.res_scan = []
+        self.slam = slam
         #in mm
-        self.max_distance = 5000
-        self.min_distance = 0
+        self.max_distance = 12000
+        self.min_distance = 50
     
     def checkHealth(self):
         if self.lidar.health[1] == 0 : 
@@ -24,40 +26,60 @@ class Lidar:
 
     def connect(self):
         try:
+            if self.port is None:
+                if not self.find_lidar_port():
+                    raise Exception("Lidar not found")
             self.lidar = RPLidar(None, self.port, timeout=3)
             sleep(3)
             logging.info(f"Lidar connected : {self.lidar.info}") 
         except RPLidarException as e:
             logging.error(f"Lidar connection failed: {e}")
             sleep(5)
-        
+        except Exception as e:
+            logging.error(f"Lidar connection failed: {e}")
+            sleep(5)
+    
+    def find_lidar_port(self):
+        ports = list(serial.tools.list_ports.comports())
+        for p in ports:
+            if p.pid == 60000:
+                self.port = p.device
+                return True
+        return False
+
     def start(self):
         self.runThread = True
         self.thread = threading.Thread(target=self._scan, name="Lidar", daemon=True)
         self.thread.start()
+    
+    def _iter_scans(self, max_buf_meas: int = 500, min_len: int = 5):
+        scan = []
+        iterator = self.lidar.iter_measurements(max_buf_meas)
+        for new_scan, quality, angle, distance in iterator:
+            if new_scan:
+                if len(scan) > min_len:
+                    yield scan
+                scan = []
+            if quality > 0 and distance > self.min_distance:
+                #rerotate based on lidar position
+                scan.append((quality, (270 - angle) % 360, distance))
 
     def _scan(self):
         while True:
+            if not self.runThread:
+                break
             if self.lidar is None:
                 self.connect()
                 continue
-            if not self.runThread:
-                break
             try:
-                for scan in self.lidar.iter_scans():
+                for scan in self._iter_scans():
                     if not self.runThread:
                         break
-                    temp = [0] * 360
-                    for _, angle, distance in scan:
-                        ang = (270 - (math.floor(angle))) % 360 
-                        if distance > self.max_distance: 
-                            temp[ang] = self.max_distance
-                            continue
-                        elif distance < self.min_distance:
-                            temp[ang] = 0
-                            continue
-                        temp[ang] = distance
-                    self.res_scan = temp
+                    items = [item for item in scan]
+                    distances = [item[2] for item in items]
+                    angles = [item[1] for item in items]
+                    self.slam.update(distances, angles)
+                    self.res_scan = scan
                     self.convertToHex()
                     sleep(0.1)
             except RPLidarException as e:
@@ -67,20 +89,11 @@ class Lidar:
 
     def convertToHex(self):
         self.map.clearMap()
-        for i, distance in enumerate(self.res_scan):
-            if distance == 0:
-                continue
-            angle = math.radians(360-i) #need convertion for this formula works
+        for _,angle, distance in self.res_scan:
             hexHeight = 350 #in mm
-            size = hexHeight/2
-            x = distance * math.cos(angle)
-            y = distance * math.sin(angle)
-            q = (math.sqrt(3)/3 * x  - 1.0/3 * y) / size
-            r = (2.0/3 * y) / size
-            q, r = cubeRound(q, r)
-            # print(i, math.floor(distance), q, r)
-            self.map.addObstacle(q, r)
-        # print(self.getLocalMap())
+            p, q, r = PolarToAxial(distance, angle, hexHeight)
+            p, q, r = HexRound(p, q, r)
+            self.map.addObstacle(p, q)
 
     def getLocalMap(self):
         obstacles = self.map.getObstacles()
@@ -88,6 +101,9 @@ class Lidar:
             obstacles[i] = {'x': obstacles[i].q, 'y': obstacles[i].r}
         return obstacles
     
+    def getPos(self):
+        return self.slam.getPos()
+
     def getFront(self):
         total = 0
         count = 0

@@ -1,3 +1,5 @@
+import math
+
 class Hex:
     def __init__(self, q, r):
         self.q = q
@@ -42,20 +44,50 @@ def findDirection(hex):
         if direction == hex:
             return i
     return -1
-        
-def cubeRound(q, r):
-    x = q
-    y = r
-    z = -x - y
-    rx = round(x)
-    ry = round(y)
-    rz = round(z)
-    x_diff = abs(rx - x)
-    y_diff = abs(ry - y)
-    z_diff = abs(rz - z)
-    if x_diff > y_diff and x_diff > z_diff:
-        rx = -ry - rz
-    elif y_diff > z_diff:
-        ry = -rx - rz
-    return rx, ry
-    
+
+def PolarToAxial(distance: float, angle: float, hexagonSize: int) -> tuple:
+    p = distance * math.cos(math.radians(angle))
+    q = distance * math.cos(math.radians(120) - math.radians(angle))
+    r = distance * math.cos(math.radians(240) - math.radians(angle))
+    p = p / hexagonSize
+    q = q / hexagonSize
+    r = r / hexagonSize
+    return (p, q, r)
+
+def HexRound(p: float, q: float, r: float) -> tuple:
+    x = round(p)
+    y = round(q)
+    z = round(r)
+    xd = abs(x - p)
+    yd = abs(y - q)
+    zd = abs(z - r)
+
+    if xd > yd and xd > zd:
+        x = -y - z
+    elif yd > xd and yd > zd:
+        y = -x - z
+    else:
+        z = -x - y
+    return (x, y, z)
+
+def lerp(a, b, t):
+    return a + (b - a) * t
+
+def HexLerp(a, b, t):
+    p1, q1, r1 = a
+    p2, q2, r2 = b
+    return lerp(p1, p2, t), lerp(q1, q2, t), lerp(r1, r2, t)
+
+def hexDistance(a, b):
+    p1, q1, r1 = a
+    p2, q2, r2 = b
+    return (abs(p1 - p2) + abs(q1 - q2) + abs(r1 - r2)) / 2
+
+def HexLineDraw(start, end):
+    N = round(hexDistance(start, end))
+    results = []
+    step = 1.0/ max(N, 1)
+    for i in range(0, N):
+        p, q, r = HexLerp(start, end, i * step)
+        results.append(HexRound(p, q, r))
+    return results
