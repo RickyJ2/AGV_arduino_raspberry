@@ -46,7 +46,8 @@ void loop() {
   
 
   if(Serial.available() > 0){
-    int input = Serial.parseInt();
+    String cmd = Serial.readString();
+    int input = cmd.toInt();
     switch(input){
       case 1:{
         motor.forward();

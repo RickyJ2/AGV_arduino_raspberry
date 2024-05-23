@@ -79,9 +79,9 @@ class Arduino:
 
     def moveForward(self):
         self.send("1")
-    def moveRight(self):
-        self.send("2")
     def moveLeft(self):
+        self.send("2")
+    def moveRight(self):
         self.send("3")
     def moveBackward(self):
         self.send("4")
