@@ -72,9 +72,6 @@ def sendAGVState():
         "type": "state",
         "data": {
             "container": arduino.getContainer(),
-            "collision": arduino.getCollision(),
-            "orientation": arduino.getOrientation(),
-            "acceleration": arduino.getAcceleration(),
             "power": arduino.getPower(),
             "localMap": lidar.getLocalMap()
         }

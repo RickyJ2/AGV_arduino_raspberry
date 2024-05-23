@@ -11,12 +11,6 @@ class Arduino:
         self.ser = None
         #init variable
         self.container = False
-        self.collision = False
-        self.orientation = 90 #yaw
-        self.acceleration = {
-            "x": 0,
-            "y": 0,
-        }
         self.power = 100
 
         self.statuspoint = False
@@ -56,17 +50,7 @@ class Arduino:
                     data = msg["data"]
                     logging.info(f"arduino state {data}")
                     self.container = data['container']
-                    self.collision = data['collision']
-                    self.orientation = data['orientation']
-                    self.acceleration = data['acceleration']
                     self.power = data['power']
-                elif(msg["type"] == "notif"):
-                    data = msg["data"]
-                    self.statuspoint = True
-                    logging.info(f"reached point {data}")
-                elif(msg["type"] == "info"):
-                    data = msg["data"]
-                    logging.info(f"Arduino info: {data}")
                 else:
                     logging.info(f"Arduino msg: {msg}")
             except Exception as e:
@@ -93,15 +77,6 @@ class Arduino:
 
     def getContainer(self):
         return self.container
-    
-    def getCollision(self):
-        return self.collision
-    
-    def getOrientation(self):
-        return self.orientation
-
-    def getAcceleration(self):
-        return self.acceleration
     
     def getPower(self):
         return self.power
