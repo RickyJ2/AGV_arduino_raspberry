@@ -78,15 +78,15 @@ class Arduino:
             logging.error(f"Arduino send error: {e}")
 
     def moveForward(self):
-        self.send(1)
+        self.send("1")
     def moveRight(self):
-        self.send(2)
+        self.send("2")
     def moveLeft(self):
-        self.send(3)
+        self.send("3")
     def moveBackward(self):
-        self.send(4)
+        self.send("4")
     def stop(self):
-        self.send(5)
+        self.send("5")
     def close(self):
         try:
             self.runThread = False
