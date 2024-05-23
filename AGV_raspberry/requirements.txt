@@ -1,2 +1,0 @@
-Adafruit_CircuitPython_RPLIDAR
-pygame==2.5.2

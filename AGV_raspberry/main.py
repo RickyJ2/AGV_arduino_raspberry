@@ -1,73 +1,185 @@
-import math
-from Class.Lidar import Lidar
-from Class.Hexagon import PolarToAxial, HexRound, HexLineDraw
-import pygame
+import logging
+from time import sleep
+from tornado import httpclient
+from client import Client
+from arduino import Arduino
+from lidar import Lidar
+import json
+import threading
+from tornado.ioloop import IOLoop, PeriodicCallback
+from hex import Hex, findDirection
+import serial.tools.list_ports
 
-HEX_RADIUS = 10
-
-def hex_to_pixel(q, r):
-    x = HEX_RADIUS * 3/2 * q
-    y = HEX_RADIUS * math.sqrt(3) * (r + q/2)
-    return (x, y)
-
-def draw_hexagon(surface, color, center):
-    x, y = center
-    points = []
-    for i in range(6):
-        angle = 2 * math.pi / 6 * i
-        dx = x + HEX_RADIUS * math.cos(angle)
-        dy = y + HEX_RADIUS * math.sin(angle)
-        points.append((dx, dy))
-    pygame.draw.polygon(surface, color, points)
-
-lidar = Lidar()
-lidar.connect()
-pygame.init()
-WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
-window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-pygame.display.set_caption('Hexagonal Occupancy Grid')
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-
-clock = pygame.time.Clock()
-
-occupancy_grid = {
-    (0, 0): 0,
+IP = "localhost"
+PORT = 8080
+header = { 
+    'websocketpass':'1234', 
+    'id':'1'
 }
+goalPointList = []
+pathList = []
+currentGoal = None
+currentPath = []
+currentTargetPoint = None
+currentCoord = Hex(0,0)
+currentDir = 0
+# 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
+globalCoordinate = Hex(0,0)
+state = 0
+previousDistance = 0
+runMainThread = False
+mainThread = None
+ioloop = IOLoop.current()
 
-try:
-    for scan in lidar.iter_scans():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                break
-        window.fill(WHITE)
-        coords = []
-        for quality, angle, distance in scan:
-            p, q, r = PolarToAxial(distance, angle)
-            p, q, r = HexRound(p, q, r)
-            coords.append((p,q,r))
-        #for every coord in coords draw a line and every hexagon value 0
-        for coord in coords:
-            occupancy_grid[(coord[0], coord[1])] = 0
-            freeGrid = HexLineDraw((0,0,0), coord)
-            for free in freeGrid:
-                occupancy_grid[(free[0], free[1])] = 1
-        #display coords in Hexagon map
-        for (q, r), occupied in occupancy_grid.items():
-            color = GREEN if occupied else RED
-            center = hex_to_pixel(q, r)
-            center = (center[0] + WINDOW_WIDTH // 2, center[1] + WINDOW_HEIGHT // 2)
-            draw_hexagon(window, color, center)
-        pygame.display.flip()
-        clock.tick(30)
-except KeyboardInterrupt:
-    print('Stopping.')
-except Exception as e:
-    print(e)
-finally:
+ports = list(serial.tools.list_ports.comports())
+arduinoPort = ""
+lidarPort = ""
+for p in ports:
+    if p.description == "USB Serial":
+        arduinoPort = p.device
+    else:   
+        lidarPort = p.device
+arduino = Arduino(port=arduinoPort)
+lidar = Lidar(port=lidarPort)
+request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
+client = Client(request, 5)
+
+def clientOnMsg(msg):
+    global state, pathList, goalPointList, globalCoordinate
+    if msg is None:
+        return
+    msg = json.loads(msg)
+    logging.info(msg)
+    if msg["type"] == "position":
+        globalCoordinate = Hex(msg["data"]["x"],msg["data"]["y"])
+    elif msg["type"] == "path":
+        goalPointList.append(msg["data"]["goal"])
+        pathList.append(msg["data"]["path"])
+    elif msg["type"] == "new path":
+        pathList.pop(0)
+        #insert on index 0
+        pathList.insert(0, msg["data"]["path"])
+        logging.info("current state will 1")
+        state = 1
+    elif msg["type"] == "stop":
+        goalPointList = []
+        pathList = []
+        logging.info("current state will 0")
+        state = 0
+
+def sendAGVState():
+    msg = {
+        "type": "state",
+        "data": {
+            "container": arduino.getContainer(),
+            "collision": arduino.getCollision(),
+            "orientation": arduino.getOrientation(),
+            "acceleration": arduino.getAcceleration(),
+            "power": arduino.getPower(),
+            "localMap": lidar.getLocalMap()
+        }
+    }
+    client.send(json.dumps(msg))
+
+def main():
+    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
+    while True:
+        if not runMainThread:
+            break
+        try:
+            #if idle state set new goal and path
+            if state == 0:
+                if len(goalPointList) == 0:
+                    continue
+                #set to new goal point
+                state = 1
+                logging.info("current state will 1")
+                currentGoal = goalPointList.pop(0)
+                currentPath = pathList.pop(0)
+                currentCoord = Hex(0,0)
+            elif state == 1:
+                #if no path left set state to idle
+                logging.info(f"current path: {currentPath}")
+                if len(currentPath) == 0:
+                    logging.info("current state will 0")
+                    state = 0
+                    logging.info(f"current goal list: {goalPointList}")
+                    continue
+                #transition to new point in path
+                point = currentPath.pop(0)
+                currentTargetPoint = Hex(point[0],point[1])
+                currentDir = findDirection(currentTargetPoint - currentCoord)
+                dir = currentDir * 60
+                logging.info(f"target: {dir}")
+                previousDistance = lidar.getFront()
+                data = {
+                    "type": "direction",
+                    "direction": dir,
+                    "duration": 1400
+                }
+                arduino.send(json.dumps(data))
+                logging.info("current state will 2")
+                state = 2
+            elif state == 2:
+                if arduino.statuspoint:
+                    arduino.statuspoint = False
+                    state = 3
+                    logging.info("current state will 3")
+                    msg = {
+                        "type": "notif",
+                        "data": "point"
+                    }
+                    ioloop.add_callback(client.send, json.dumps(msg))
+                    logging.info(f"distance: {lidar.getFront() - previousDistance}")
+            elif state == 3:
+                #reached target point in path
+                logging.info("in state 3")
+                currentCoord = currentTargetPoint
+                logging.info("current state will 1")
+                state = 1
+            elif state == 4:
+                pass
+        except Exception as e:
+            logging.error(f"Main Error: {e}")
+
+def errorHandler():
+    global runMainThread, mainThread
+    runMainThread = False
+    mainThread.join()
+    ioloop.stop()
+    client.closeConnection()
+    arduino.close()
     lidar.stop()
-    pygame.quit()
+
+if __name__ == "__main__":
+    logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
+    #fileHandler for Logging
+    fileHandler = logging.FileHandler('/home/AGV/python.log')
+    fileHandler.setLevel(logging.DEBUG)
+    fileHandler.setFormatter(logFormatter)
+    #consoleHandler for Logging
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.DEBUG)
+    consoleHandler.setFormatter(logFormatter)
+    #Configure Logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    # logger.addHandler(fileHandler)
+    logger.addHandler(consoleHandler)
+    logging.info("Program Start")
+    try:
+        lidar.start()
+        arduino.start()
+        sleep(10)
+        client.connect(clientOnMsg)
+        runMainThread = True
+        mainThread = threading.Thread(target=main,name="main", daemon=True)
+        mainThread.start()
+        PeriodicCallback(sendAGVState, 1000).start()
+        ioloop.start()
+    except KeyboardInterrupt:
+        errorHandler()
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        errorHandler()
+    logging.info("Program exit")
