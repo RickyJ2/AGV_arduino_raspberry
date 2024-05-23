@@ -49,23 +49,23 @@ void loop() {
     int input = Serial.parseInt();
     switch(input){
       case 1:{
-        Serial.println("Maju");
+        motor.forward();
         break;
       }
       case 2:{
-        Serial.println("Kiri");
+        motor.turnLeft();
         break;
       }
       case 3:{
-        Serial.println("Kanan");
+        motor.turnRight();
         break;
       }
       case 4:{
-        Serial.println("Mundur");
+        motor.backward();
         break;
       }
       case 5:{
-        Serial.println("Stop");
+        motor.stop();
         break;
       }
     }
