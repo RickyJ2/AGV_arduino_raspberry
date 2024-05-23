@@ -8,7 +8,7 @@ import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection
-import serial.tools.list_ports
+from slam import SLAM
 
 IP = "localhost"
 PORT = 8080
@@ -26,23 +26,19 @@ currentDir = 0
 # 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
 globalCoordinate = Hex(0,0)
 state = 0
-previousDistance = 0
+previousPos = (0,0,0)
 runMainThread = False
 mainThread = None
 ioloop = IOLoop.current()
 
-ports = list(serial.tools.list_ports.comports())
-arduinoPort = ""
-lidarPort = ""
-for p in ports:
-    if p.description == "USB Serial":
-        arduinoPort = p.device
-    else:   
-        lidarPort = p.device
-arduino = Arduino(port=arduinoPort)
-lidar = Lidar(port=lidarPort)
+arduino = Arduino()
+slam = SLAM()
+lidar = Lidar(slam=slam)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
+
+def distance(pos, target):
+    return ((pos[0] - target[0])**2 + (pos[1] - target[1])**2)**0.5
 
 def clientOnMsg(msg):
     global state, pathList, goalPointList, globalCoordinate
@@ -108,26 +104,30 @@ def main():
                 currentDir = findDirection(currentTargetPoint - currentCoord)
                 dir = currentDir * 60
                 logging.info(f"target: {dir}")
-                previousDistance = lidar.getFront()
-                data = {
-                    "type": "direction",
-                    "direction": dir,
-                    "duration": 1400
-                }
-                arduino.send(json.dumps(data))
+                previousPos = lidar.getPos()
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
-                if arduino.statuspoint:
-                    arduino.statuspoint = False
-                    state = 3
-                    logging.info("current state will 3")
-                    msg = {
-                        "type": "notif",
-                        "data": "point"
-                    }
-                    ioloop.add_callback(client.send, json.dumps(msg))
-                    logging.info(f"distance: {lidar.getFront() - previousDistance}")
+                if dir == 0:
+                    while distance(lidar.getPos(), previousPos) < 350:
+                        arduino.moveForward()
+                    arduino.stop()
+                elif dir != 0:
+                    while lidar.getPos()[2] != dir:
+                        arduino.moveRight()
+                    arduino.stop()
+                    while distance(lidar.getPos(), previousPos) < 350:
+                        arduino.moveForward()
+                    arduino.stop()
+                else:
+                    arduino.stop()
+                state = 3
+                logging.info("current state will 3")
+                msg = {
+                    "type": "notif",
+                    "data": "point"
+                }
+                ioloop.add_callback(client.send, json.dumps(msg))
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     #Configure Logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    # logger.addHandler(fileHandler)
+    logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
     logging.info("Program Start")
     try:
