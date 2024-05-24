@@ -10,7 +10,7 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection
 from slam import SLAM
 
-IP = "localhost"
+IP = "10.53.6.113"
 PORT = 8080
 header = { 
     'websocketpass':'1234', 
@@ -69,7 +69,8 @@ def sendAGVState():
         "data": {
             "container": arduino.getContainer(),
             "power": arduino.getPower(),
-            "localMap": lidar.getLocalMap()
+            "localMap": lidar.getLocalMap(),
+            "orientation": lidar.getPos()[2]
         }
     }
     client.send(json.dumps(msg))
@@ -77,6 +78,7 @@ def sendAGVState():
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
     while True:
+        logging.info(lidar.getPos())
         if not runMainThread:
             break
         try:

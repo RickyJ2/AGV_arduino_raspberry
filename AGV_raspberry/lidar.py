@@ -111,7 +111,9 @@ class Lidar:
             orientation = (90 + orientation) * -1
             orientation = orientation % 360
             orientation = 360 - orientation
-        pose[2] = orientation
+        lst = list(pose)
+        lst[2] = orientation
+        pose = tuple(lst)
         return pose
 
     def getFront(self):
