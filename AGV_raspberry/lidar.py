@@ -102,7 +102,17 @@ class Lidar:
         return obstacles
     
     def getPos(self):
-        return self.slam.getPos()
+        pose = self.slam.getPos()
+        orientation = pose[2]
+        if orientation > 0:
+            orientation += 90
+            orientation = orientation % 360
+        else:
+            orientation = (90 + orientation) * -1
+            orientation = orientation % 360
+            orientation = 360 - orientation
+        pose[2] = orientation
+        return pose
 
     def getFront(self):
         total = 0

@@ -108,35 +108,29 @@ def main():
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
-                if dir == 0:
-                    firstTime = True
-                    while distance(lidar.getPos(), previousPos) < 350:
-                        if firstTime:
-                            arduino.moveForward()
-                            firstTime = False
-                    arduino.stop()
-                elif dir != 0:
-                    firstTime = True
-                    while lidar.getPos()[2] != dir:
-                        if firstTime:
-                            arduino.moveLeft()
-                            firstTime = False
-                    arduino.stop()
-                    firstTime = True
-                    while distance(lidar.getPos(), previousPos) < 350:
-                        if firstTime:
-                            arduino.moveForward()
-                            firstTime = False
-                    arduino.stop()
+                pose = lidar.getPos()
+                dOrientation = pose[2] - dir
+                if dir == 360:
+                    dOrientation *= -1
+                if abs(dOrientation) < 10 or abs(dOrientation) > 360 - 3:
+                    arduino.moveForward()
+                    if distance(lidar.getPos(), previousPos) < 350:
+                        arduino.stop()
+                        state = 3
+                        logging.info("current state will 3")
+                        msg = {
+                            "type": "notif",
+                            "data": "point"
+                        }
+                        ioloop.add_callback(client.send, json.dumps(msg))
                 else:
-                    arduino.stop()
-                state = 3
-                logging.info("current state will 3")
-                msg = {
-                    "type": "notif",
-                    "data": "point"
-                }
-                ioloop.add_callback(client.send, json.dumps(msg))
+                    if dir == 360 or dir == 0:
+                        if dOrientation > 180:
+                            dOrientation -= 360
+                    if dOrientation > 0:
+                        arduino.moveRight()
+                    else:
+                        arduino.moveLeft()
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
