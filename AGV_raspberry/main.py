@@ -114,7 +114,7 @@ def main():
                     dOrientation *= -1
                 if abs(dOrientation) < 10 or abs(dOrientation) > 360 - 3:
                     arduino.moveForward()
-                    if distance(lidar.getPos(), previousPos) < 350:
+                    if distance(lidar.getPos(), previousPos) >= 340:
                         arduino.stop()
                         state = 3
                         logging.info("current state will 3")
