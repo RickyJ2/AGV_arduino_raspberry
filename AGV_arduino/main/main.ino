@@ -46,7 +46,7 @@ void loop() {
   
 
   if(Serial.available() > 0){
-    String cmd = Serial.readString();
+    String cmd = Serial.readStringUntil('\n');
     int input = cmd.toInt();
     switch(input){
       case 1:{
