@@ -78,7 +78,7 @@ def sendAGVState():
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
     while True:
-        logging.info(lidar.getPos())
+        # logging.info(lidar.getPos())
         if not runMainThread:
             break
         try:
@@ -156,7 +156,10 @@ def errorHandler():
 if __name__ == "__main__":
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
-    fileHandler = logging.FileHandler('/home/AGV/python.log')
+    try:
+        fileHandler = logging.FileHandler('/home/AGV/python.log')
+    except Exception as e:
+        fileHandler = logging.FileHandler('python.log')
     fileHandler.setLevel(logging.DEBUG)
     fileHandler.setFormatter(logFormatter)
     #consoleHandler for Logging

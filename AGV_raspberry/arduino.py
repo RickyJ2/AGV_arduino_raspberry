@@ -12,6 +12,11 @@ class Arduino:
         self.ser = None
         #init variable
         self.container = False
+        self.orientation = 90 #yaw
+        self.acceleration = {
+            "x": 0,
+            "y": 0,
+        }
         self.power = 100
 
         self.statuspoint = False
@@ -62,6 +67,8 @@ class Arduino:
                     data = msg["data"]
                     # logging.info(f"arduino state {data}")
                     self.container = data['container']
+                    self.orientation = data['orientation']
+                    self.acceleration = data['acceleration']
                     self.power = data['power']
                 else:
                     logging.info(f"Arduino msg: {msg}")
@@ -72,20 +79,42 @@ class Arduino:
 
     def send(self, message):
         try:
-            self.ser.write(bytes(f"{message}'\n'", 'utf-8'))
+            logging.info(f"Arduino send: {message}")
+            self.ser.write(bytes(message, 'utf-8'))
+            self.ser.write(bytes('\n', 'utf-8')) #endline
         except Exception as e:
             logging.error(f"Arduino send error: {e}")
 
     def moveForward(self):
-        self.send("1")
+        cmd = {
+            "type": "move",
+            "data": "1"
+        }
+        self.send(cmd)
     def moveLeft(self):
-        self.send("2")
+        cmd = {
+            "type": "move",
+            "data": "2"
+        }
+        self.send(cmd)
     def moveRight(self):
-        self.send("3")
+        cmd = {
+            "type": "move",
+            "data": "3"
+        }
+        self.send(cmd)
     def moveBackward(self):
-        self.send("4")
+        cmd = {
+            "type": "move",
+            "data": "4"
+        }
+        self.send(cmd)
     def stop(self):
-        self.send("5")
+        cmd = {
+            "type": "move",
+            "data": "0"
+        }
+        self.send(cmd)
     def close(self):
         try:
             self.runThread = False
@@ -97,6 +126,12 @@ class Arduino:
 
     def getContainer(self):
         return self.container
+
+    def getOrientation(self):
+        return self.orientation
+
+    def getAcceleration(self):
+        return self.acceleration
     
     def getPower(self):
         return self.power
