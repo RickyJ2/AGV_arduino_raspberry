@@ -60,7 +60,7 @@ class Arduino:
                 msg = json.loads(buffer, strict=False)
                 if(msg["type"] == "state"):
                     data = msg["data"]
-                    logging.info(f"arduino state {data}")
+                    # logging.info(f"arduino state {data}")
                     self.container = data['container']
                     self.power = data['power']
                 else:
@@ -72,8 +72,7 @@ class Arduino:
 
     def send(self, message):
         try:
-            logging.info(f"send arduino msg: {message}")
-            self.ser.write(bytes(message, 'utf-8'))
+            self.ser.write(bytes(f"{message}'\n'", 'utf-8'))
         except Exception as e:
             logging.error(f"Arduino send error: {e}")
 
