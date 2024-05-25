@@ -44,31 +44,34 @@ void loop() {
     previousMainMillis = currentMillis;
   }
   
-
   if(Serial.available() > 0){
     String cmd = Serial.readStringUntil('\n');
-    int input = cmd.toInt();
-    switch(input){
-      case 1:{
-        motor.forward();
-        break;
-      }
-      case 2:{
-        motor.turnLeft();
-        break;
-      }
-      case 3:{
-        motor.turnRight();
-        break;
-      }
-      case 4:{
-        motor.backward();
-        break;
-      }
-      case 5:{
-        motor.stop();
-        break;
-      }
-    }
+    JsonDocument input;
+    deserializeJson(input, cmd);
+    String type = input["type"];
+    Serial.println(type);
+    // int input = cmd.toInt();
+    // switch(input){
+    //   case 1:{
+    //     motor.forward();
+    //     break;
+    //   }
+    //   case 2:{
+    //     motor.turnLeft();
+    //     break;
+    //   }
+    //   case 3:{
+    //     motor.turnRight();
+    //     break;
+    //   }
+    //   case 4:{
+    //     motor.backward();
+    //     break;
+    //   }
+    //   case 5:{
+    //     motor.stop();
+    //     break;
+    //   }
+    // }
   }
 }
