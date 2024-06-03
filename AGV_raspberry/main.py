@@ -49,7 +49,7 @@ def LyapunovControl(currentPoint, targetPoint):
     errorX = targetPoint[0] - currentPoint[0]
     errorY = targetPoint[1] - currentPoint[1]
     errorTheta = targetPoint[2] - currentPoint[2]
-    if abs(errorX) < 10 and abs(errorY) < 10 and abs(errorTheta) < math.radians(10):
+    if abs(errorX) < 350/2 and abs(errorY) < 350/2 and abs(errorTheta) < math.radians(180):
         return 0, 0
     k1 = 1
     k2 = 1
