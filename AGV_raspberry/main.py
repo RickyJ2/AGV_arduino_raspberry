@@ -52,8 +52,8 @@ def LyapunovControl(currentPoint, targetPoint):
     if abs(errorX) < 350/2 and abs(errorY) < 350/2 and abs(errorTheta) < math.radians(180):
         return 0, 0
     k1 = 1
-    k2 = 1
-    k3 = 1
+    k2 = 8
+    k3 = 3
     v = k1 * (errorX * math.cos(currentPoint[2]) + errorY * math.sin(currentPoint[2]))
     omega = k2 * (-errorX * math.sin(currentPoint[2]) + errorY * math.cos(currentPoint[2])) + k3 * (errorTheta)
     return v, omega
