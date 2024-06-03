@@ -70,12 +70,12 @@ def steeringControl(currentPoint, targetPoint):
     R = vR * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
     if L > 100: 
         L = 100
-    if L < 50:
-        L = 50
+    if L < 60:
+        L = 60
     if R > 100:
         R = 100
-    if R < 50:
-        R = 50
+    if R < 60:
+        R = 60
     LVolt,RVolt = motorModelLeftID01(L), motorModelRightID01(R)
     #LVolt, RVolt = motorModelLeftID02(L), motorModelRightID02(R)
     return LVolt, RVolt
@@ -178,7 +178,7 @@ def main():
                 #         break
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
                 curPos = lidar.getPos()
-                logging.error("current Position: ",(curPos[0], curPos[1], curPos[2]), "targetPoint: ", targetPoint)
+                logging.error(f"current Position: (${curPos[0]}, ${curPos[1]}) targetPoint: ${targetPoint}")
                 Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
                 data = {
                     "type": "control",
