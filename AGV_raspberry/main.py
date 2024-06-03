@@ -157,7 +157,8 @@ def main():
                 currentDir = findDirection(currentTargetPoint - currentCoord)
                 dir = currentDir * 60
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
-                Lvolt, Rvolt = steeringControl(lidar.getPos(), (targetPoint[0], targetPoint[1], math.radians(dir)))
+                curPos = lidar.getPos()
+                Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
                 logging.info(f"target: {dir}")
                 data = {
                     "type": "control",
@@ -176,8 +177,9 @@ def main():
                 #         state = 5
                 #         break
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
-                logging.error("current Position: ",lidar.getPos(), "targetPoint: ", targetPoint)
-                Lvolt, Rvolt = steeringControl(lidar.getPos(), (targetPoint[0], targetPoint[1], math.radians(dir)))
+                curPos = lidar.getPos()
+                logging.error("current Position: ",(curPos[0], curPos[1], curPos[2]), "targetPoint: ", targetPoint)
+                Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
                 data = {
                     "type": "control",
                     "left": Lvolt,
