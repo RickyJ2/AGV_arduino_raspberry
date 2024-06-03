@@ -87,19 +87,28 @@ void loop() {
     }else if(type == "control"){
       float leftVolt = input["left"];
       float rigthVolt = input["volt"];
-      int leftPWM = leftVolt * 255 / battery.getState()
-      int rightPWM = leftVolt * 255 / battery.getState()
-      motor.setLeftSpeed(leftPWM);
-      motor.setRightSpeed(rightPWM);
-      if(leftPWM < 0){
-        motor.left.backward();
+      if (leftVolt == 0){
+        motor.left.stop();
       }else{
-        motor.left.forward();
+        int leftPWM = leftVolt * 255 / battery.getState();
+        motor.setLeftSpeed(leftPWM);
+        if(leftPWM < 0){
+          motor.left.backward();
+        }else{
+          motor.left.forward();
+        }
       }
-      if(rightPWM < 0){
-        motor.right.backward();
+      if(rigthVolt == 0){
+        motor.right.stop();
       }else{
-        motor.right.forward();
+        int rightPWM = leftVolt * 255 / battery.getState(); 
+        motor.setRightSpeed(rightPWM);
+      
+        if(rightPWM < 0){
+          motor.right.backward();
+        }else{
+          motor.right.forward();
+        }  
       }
     }
   }

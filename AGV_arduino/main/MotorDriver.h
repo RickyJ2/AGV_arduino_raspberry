@@ -27,6 +27,9 @@ class MotorDriver{
       setRightSpeed(speed);
     }
     void setLeftSpeed(int speed){
+      if(speed < 0){
+        speed = -1 * speed;
+      }
       if(speed > maxSpeed){
         left.setSpeed(maxSpeed);
       }else if(speed < minSpeed){
@@ -37,7 +40,7 @@ class MotorDriver{
     }
     void setRightSpeed(int speed){
       if(speed < 0){
-        speed = -1 * speed
+        speed = -1 * speed;
       }
       if(speed > maxSpeed){
         right.setSpeed(maxSpeed);

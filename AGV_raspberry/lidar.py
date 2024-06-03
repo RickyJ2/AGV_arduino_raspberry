@@ -114,9 +114,9 @@ class Lidar:
         lst = list(pose)
         lst[0] *= -1
         lst[1] *= -1
-        lst[0] -= 5000
-        lst[1] -= 5000
-        lst[2] = orientation
+        lst[0] += 5000
+        lst[1] += 5000
+        lst[2] = math.radians(orientation)
         pose = tuple(lst)
         return pose
 

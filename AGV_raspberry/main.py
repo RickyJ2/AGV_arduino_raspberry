@@ -17,7 +17,7 @@ import numpy as np
 RobotWidth = 189 #mm
 WheelDiameter = 36 #mm
 
-IP = "10.53.6.113"
+IP = "192.168.85.180"
 PORT = 8080
 header = {
     'websocketpass':'1234',
@@ -62,6 +62,8 @@ def steeringControl(currentPoint, targetPoint):
     #point: x (mm), y (mm), theta(radians)
     #return left voltage, right voltage
     v, omega = LyapunovControl(currentPoint, targetPoint)
+    if v == 0  and omega == 0:
+        return 0,0
     vL = v - omega*RobotWidth/2 #Linear Velocity mm/s
     vR = v + omega*RobotWidth/2 #Linear Velocity mm/s
     L = vL * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
@@ -120,7 +122,6 @@ def sendAGVState():
 def main():
     global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
     while True:
-        # logging.info(lidar.getPos())
         if not runMainThread:
             break
         try:
@@ -167,6 +168,7 @@ def main():
                 #         state = 5
                 #         break
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
+                logging.error("current Position: ",lidar.getPos(), "targetPoint: ", targetPoint)
                 Lvolt, Rvolt = steeringControl(lidar.getPos(), (targetPoint[0], targetPoint[1], math.radians(dir)))
                 data = {
                     "type": "control",
