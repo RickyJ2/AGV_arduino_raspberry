@@ -9,11 +9,10 @@
   OUT2 OUT3 POS
 */
 class MotorDriver{
-  private:
+  public:
     Motor left;
     Motor right;
-
-  public:
+    
     MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB){
       this->left = Motor(ENB, IN3, IN4);
       this->right = Motor(ENA, IN1, IN2);
@@ -37,6 +36,9 @@ class MotorDriver{
       } 
     }
     void setRightSpeed(int speed){
+      if(speed < 0){
+        speed = -1 * speed
+      }
       if(speed > maxSpeed){
         right.setSpeed(maxSpeed);
       }else if(speed < minSpeed){

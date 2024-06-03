@@ -46,13 +46,19 @@ def findDirection(hex):
     return -1
 
 def PolarToAxial(distance: float, angle: float, hexagonSize: int) -> tuple:
-    p = distance * math.cos(math.radians(angle))
-    q = distance * math.cos(math.radians(120) - math.radians(angle))
-    r = distance * math.cos(math.radians(240) - math.radians(angle))
+    x = distance * math.cos(math.radians(angle))
+    y = distance * math.sin(math.radians(angle))
+    p = math.sqrt(3)/3.0 * x - y/3.0 
+    q = 2.0 * y / 3
     p = p / hexagonSize
     q = q / hexagonSize
-    r = r / hexagonSize
+    r = -p - q
     return (p, q, r)
+
+def AxialToCoord(p: float, q: float, hexagonSize: int) -> tuple:
+    x = hexagonSize * (3/2 * p)
+    y = hexagonSize * (math.sqrt(3)/2 * p + math.sqrt(3) * q)
+    return (x, y)
 
 def HexRound(p: float, q: float, r: float) -> tuple:
     x = round(p)

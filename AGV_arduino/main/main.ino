@@ -84,23 +84,40 @@ void loop() {
     }else if(type == "move"){
       typeMove = input["data"];
       typeMoving = MANUAL;
+    }else if(type == "control"){
+      float leftVolt = input["left"];
+      float rigthVolt = input["volt"];
+      int leftPWM = leftVolt * 255 / battery.getState()
+      int rightPWM = leftVolt * 255 / battery.getState()
+      motor.setLeftSpeed(leftPWM);
+      motor.setRightSpeed(rightPWM);
+      if(leftPWM < 0){
+        motor.left.backward();
+      }else{
+        motor.left.forward();
+      }
+      if(rightPWM < 0){
+        motor.right.backward();
+      }else{
+        motor.right.forward();
+      }
     }
   }
 
-  switch(typeMove){
-    case IDLE:{
-      motor.stop();
-      break;
-    }
-    case MANUAL:{
-      controlMovement(typeMove);
-      break;
-    }
-    case AUTO:{
-      driving(orientation, currentMillis);
-      break;
-    }
-  }
+  // switch(typeMove){
+  //   case IDLE:{
+  //     motor.stop();
+  //     break;
+  //   }
+  //   case MANUAL:{
+  //     controlMovement(typeMove);
+  //     break;
+  //   }
+  //   case AUTO:{
+  //     driving(orientation, currentMillis);
+  //     break;
+  //   }
+  // }
 }
 
 void driving(float orientation, unsigned long currentMillis){

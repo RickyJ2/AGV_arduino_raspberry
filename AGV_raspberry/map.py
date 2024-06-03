@@ -1,7 +1,7 @@
 from hex import Hex, hexDirections
 
 class Map:
-    def __init__(self, size = 3):
+    def __init__(self, size = 5):
         self.grid = {}
         self.size = size
         self.createGrid()

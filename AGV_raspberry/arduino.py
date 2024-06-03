@@ -70,6 +70,10 @@ class Arduino:
                     self.orientation = data['orientation']
                     self.acceleration = data['acceleration']
                     self.power = data['power']
+                elif msg["type"] == "notif":
+                    data = msg["data"]
+                    self.statuspoint = True
+                    logging.info(f"Arduino notif: {data}")
                 else:
                     logging.info(f"Arduino msg: {msg}")
             except Exception as e:

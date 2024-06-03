@@ -1,4 +1,5 @@
 import logging
+import math
 from time import sleep
 from tornado import httpclient
 from client import Client
@@ -7,13 +8,19 @@ from lidar import Lidar
 import json
 import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
-from hex import Hex, findDirection
+from hex import Hex, findDirection, AxialToCoord
 from slam import SLAM
+from util import distance, findOrientation
+import numpy as np
+
+#CONSTANT
+RobotWidth = 189 #mm
+WheelDiameter = 36 #mm
 
 IP = "10.53.6.113"
 PORT = 8080
-header = { 
-    'websocketpass':'1234', 
+header = {
+    'websocketpass':'1234',
     'id':'1'
 }
 goalPointList = []
@@ -37,8 +44,43 @@ lidar = Lidar(slam=slam)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 
-def distance(pos, target):
-    return ((pos[0] - target[0])**2 + (pos[1] - target[1])**2)**0.5
+def LyapunovControl(currentPoint, targetPoint):
+    #point: x, y, theta(radians)
+    errorX = targetPoint[0] - currentPoint[0]
+    errorY = targetPoint[1] - currentPoint[1]
+    errorTheta = targetPoint[2] - currentPoint[2]
+    if abs(errorX) < 10 and abs(errorY) < 10 and abs(errorTheta) < math.radians(10):
+        return 0, 0
+    k1 = 1
+    k2 = 1
+    k3 = 1
+    v = k1 * (errorX * math.cos(currentPoint[2]) + errorY * math.sin(currentPoint[2]))
+    omega = k2 * (-errorX * math.sin(currentPoint[2]) + errorY * math.cos(currentPoint[2])) + k3 * (errorTheta)
+    return v, omega
+
+def steeringControl(currentPoint, targetPoint):
+    #point: x (mm), y (mm), theta(radians)
+    #return left voltage, right voltage
+    v, omega = LyapunovControl(currentPoint, targetPoint)
+    vL = v - omega*RobotWidth/2 #Linear Velocity mm/s
+    vR = v + omega*RobotWidth/2 #Linear Velocity mm/s
+    L = vL * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
+    R = vR * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
+    LVolt,RVolt = motorModelLeftID01(L), motorModelRightID01(R)
+    #LVolt, RVolt = motorModelLeftID02(L), motorModelRightID02(R)
+    return LVolt, RVolt
+
+def motorModelRightID01(RPM):
+    return np.exp((RPM - 19.52) / 33.90)
+
+def motorModelLeftID01(RPM):
+    return np.exp((RPM - 33.53) / 25.64)
+
+def motorModelRightID02(RPM):
+    return np.exp((RPM - 25.61) / 28.53)
+
+def motorModelLeftID02(RPM):
+    return np.exp((RPM - 39.93) / 24.37)
 
 def clientOnMsg(msg):
     global state, pathList, goalPointList, globalCoordinate
@@ -105,34 +147,41 @@ def main():
                 currentTargetPoint = Hex(point[0],point[1])
                 currentDir = findDirection(currentTargetPoint - currentCoord)
                 dir = currentDir * 60
+                targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
+                Lvolt, Rvolt = steeringControl(lidar.getPos(), (targetPoint[0], targetPoint[1], math.radians(dir)))
                 logging.info(f"target: {dir}")
-                previousPos = lidar.getPos()
+                data = {
+                    "type": "control",
+                    "left": Lvolt,
+                    "right": Rvolt,
+                }
+                arduino.send(json.dumps(data))
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
-                pose = lidar.getPos()
-                dOrientation = pose[2] - dir
-                if dir == 360:
-                    dOrientation *= -1
-                if abs(dOrientation) < 10 or abs(dOrientation) > 360 - 3:
-                    arduino.moveForward()
-                    if distance(lidar.getPos(), previousPos) >= 340:
-                        arduino.stop()
-                        state = 3
-                        logging.info("current state will 3")
-                        msg = {
-                            "type": "notif",
-                            "data": "point"
-                        }
-                        ioloop.add_callback(client.send, json.dumps(msg))
-                else:
-                    if dir == 360 or dir == 0:
-                        if dOrientation > 180:
-                            dOrientation -= 360
-                    if dOrientation > 0:
-                        arduino.moveRight()
-                    else:
-                        arduino.moveLeft()
+                # for i in range(3):
+                #     if len(currentPath) <= i:
+                #         break
+                #     if not lidar.map.getHexAt(currentPath[i][0] - currentCoord[0], currentPath[i][1] - currentCoord[1]).walkable == False:
+                #         logging.info("current state will 5")
+                #         state = 5
+                #         break
+                targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
+                Lvolt, Rvolt = steeringControl(lidar.getPos(), (targetPoint[0], targetPoint[1], math.radians(dir)))
+                data = {
+                    "type": "control",
+                    "left": Lvolt,
+                    "right": Rvolt,
+                }
+                arduino.send(json.dumps(data))
+                if Lvolt == 0 and Rvolt == 0:
+                    state = 3
+                    logging.info("current state will 3")
+                    msg = {
+                        "type": "notif",
+                        "data": "point"
+                    }
+                    ioloop.add_callback(client.send, json.dumps(msg))
             elif state == 3:
                 #reached target point in path
                 logging.info("in state 3")
@@ -140,6 +189,8 @@ def main():
                 logging.info("current state will 1")
                 state = 1
             elif state == 4:
+                pass
+            elif state == 5:
                 pass
         except Exception as e:
             logging.error(f"Main Error: {e}")

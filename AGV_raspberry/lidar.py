@@ -17,6 +17,7 @@ class Lidar:
         #in mm
         self.max_distance = 12000
         self.min_distance = 50
+        self.hexHeight = 350
     
     def checkHealth(self):
         if self.lidar.health[1] == 0 : 
@@ -90,8 +91,7 @@ class Lidar:
     def convertToHex(self):
         self.map.clearMap()
         for _,angle, distance in self.res_scan:
-            hexHeight = 350 #in mm
-            p, q, r = PolarToAxial(distance, angle, hexHeight)
+            p, q, r = PolarToAxial(distance, angle, self.hexHeight)
             p, q, r = HexRound(p, q, r)
             self.map.addObstacle(p, q)
 
@@ -112,6 +112,10 @@ class Lidar:
             orientation = orientation % 360
             orientation = 360 - orientation
         lst = list(pose)
+        lst[0] *= -1
+        lst[1] *= -1
+        lst[0] -= 5000
+        lst[1] -= 5000
         lst[2] = orientation
         pose = tuple(lst)
         return pose
