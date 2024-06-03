@@ -68,6 +68,14 @@ def steeringControl(currentPoint, targetPoint):
     vR = v + omega*RobotWidth/2 #Linear Velocity mm/s
     L = vL * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
     R = vR * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
+    if L > 100: 
+        L = 100
+    if L < 50:
+        L = 50
+    if R > 100:
+        R = 100
+    if R < 50:
+        R = 50
     LVolt,RVolt = motorModelLeftID01(L), motorModelRightID01(R)
     #LVolt, RVolt = motorModelLeftID02(L), motorModelRightID02(R)
     return LVolt, RVolt
