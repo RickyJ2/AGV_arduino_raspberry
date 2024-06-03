@@ -1,1 +1,1 @@
-im
+from .fastestrplidar import FastestRplidar
