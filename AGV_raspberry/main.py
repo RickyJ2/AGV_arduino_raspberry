@@ -10,7 +10,6 @@ import threading
 from tornado.ioloop import IOLoop, PeriodicCallback
 from hex import Hex, findDirection, AxialToCoord
 from slam import SLAM
-from util import distance, findOrientation
 import numpy as np
 
 #CONSTANT
@@ -49,7 +48,7 @@ def LyapunovControl(currentPoint, targetPoint):
     errorX = targetPoint[0] - currentPoint[0]
     errorY = targetPoint[1] - currentPoint[1]
     errorTheta = targetPoint[2] - currentPoint[2]
-    if abs(errorX) < 350/2 and abs(errorY) < 350/2 and abs(errorTheta) < math.radians(180):
+    if abs(errorX) < lidar.hexHeight/2 and abs(errorY) < lidar.hexHeight/2 and abs(errorTheta) < math.radians(180):
         return 0, 0
     k1 = 1
     k2 = 8
@@ -169,13 +168,6 @@ def main():
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
-                # for i in range(3):
-                #     if len(currentPath) <= i:
-                #         break
-                #     if not lidar.map.getHexAt(currentPath[i][0] - currentCoord[0], currentPath[i][1] - currentCoord[1]).walkable == False:
-                #         logging.info("current state will 5")
-                #         state = 5
-                #         break
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
                 curPos = lidar.getPos()
                 logging.error(f"current Position: (${curPos[0]}, ${curPos[1]}) targetPoint: ${targetPoint}")
