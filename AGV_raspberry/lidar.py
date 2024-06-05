@@ -1,8 +1,7 @@
 import logging
 import math
 from time import sleep
-# from adafruit_rplidar import RPLidar, RPLidarException
-from fastestrplidar.fastestrplidar import FastestRplidar
+from adafruit_rplidar import RPLidar, RPLidarException
 import threading
 from map import Map
 from hex import HexRound, PolarToAxial
@@ -31,16 +30,12 @@ class Lidar:
             if self.port is None:
                 if not self.find_lidar_port():
                     raise Exception("Lidar not found")
-            # self.lidar = RPLidar(None, self.port, timeout=3)
-            self.lidar = FastestRplidar()
-            self.lidar.connectlidar(self.port)
-            self.lidar.startmotor()
+            self.lidar = RPLidar(None, self.port, timeout=3)
             sleep(3)
-            logging.info(f"Lidar connected: {self.lidar.checkhealth()}")
-            # logging.info(f"Lidar connected : {self.lidar.info}") 
-        # except RPLidarException as e:
-        #     logging.error(f"Lidar connection failed: {e}")
-        #     sleep(5)
+            logging.info(f"Lidar connected : {self.lidar.info}") 
+        except RPLidarException as e:
+            logging.error(f"Lidar connection failed: {e}")
+            sleep(5)
         except Exception as e:
             logging.error(f"Lidar connection failed: {e}")
             sleep(5)
@@ -87,7 +82,7 @@ class Lidar:
                     self.slam.update(distances, angles)
                     self.res_scan = scan
                     self.convertToHex()
-                    sleep(0.1)
+                    sleep(0.001)
             except RPLidarException as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
