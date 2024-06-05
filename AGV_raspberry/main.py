@@ -57,24 +57,31 @@ def LyapunovControl(currentPoint, targetPoint):
     omega = k2 * (-errorX * math.sin(currentPoint[2]) + errorY * math.cos(currentPoint[2])) + k3 * (errorTheta)
     return v, omega
 
+def saturated(val):
+    if math.floor(val) == 0:
+        return 0
+    times = 1
+    if val < 0:
+        times = -1
+        val *= -1
+    if val > 100:
+        val = 100
+    if val < 60:
+        val = 60
+    return val * times
+
 def steeringControl(currentPoint, targetPoint):
     #point: x (mm), y (mm), theta(radians)
     #return left voltage, right voltage
     v, omega = LyapunovControl(currentPoint, targetPoint)
-    if v == 0  and omega == 0:
+    if math.floor(v) == 0  and math.floor(omega) == 0:
         return 0,0
     vL = v - omega*RobotWidth/2 #Linear Velocity mm/s
     vR = v + omega*RobotWidth/2 #Linear Velocity mm/s
     L = vL * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
     R = vR * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
-    if L > 100: 
-        L = 100
-    if L < 60:
-        L = 60
-    if R > 100:
-        R = 100
-    if R < 60:
-        R = 60
+    L = saturated(L)
+    R = saturated(R)
     LVolt,RVolt = motorModelLeftID01(L), motorModelRightID01(R)
     #LVolt, RVolt = motorModelLeftID02(L), motorModelRightID02(R)
     return LVolt, RVolt
@@ -168,9 +175,10 @@ def main():
                 logging.info("current state will 2")
                 state = 2
             elif state == 2:
+                sleep(0.05)
                 targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
                 curPos = lidar.getPos()
-                logging.error(f"current Position: (${curPos[0]}, ${curPos[1]}) targetPoint: ${targetPoint}")
+                logging.error(f"current Position: ({curPos[0]}, {curPos[1]}) targetPoint: {targetPoint}")
                 Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
                 data = {
                     "type": "control",

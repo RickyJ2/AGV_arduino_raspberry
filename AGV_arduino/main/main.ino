@@ -86,11 +86,13 @@ void loop() {
       typeMoving = MANUAL;
     }else if(type == "control"){
       float leftVolt = input["left"];
-      float rigthVolt = input["volt"];
+      float rigthVolt = input["right"];
+      int leftPWM = 0;
+      int rightPWM = 0;
       if (leftVolt == 0){
         motor.left.stop();
       }else{
-        int leftPWM = leftVolt * 255 / battery.getState();
+        leftPWM = leftVolt * 255 / battery.getVoltState();
         motor.setLeftSpeed(leftPWM);
         if(leftPWM < 0){
           motor.left.backward();
@@ -101,7 +103,7 @@ void loop() {
       if(rigthVolt == 0){
         motor.right.stop();
       }else{
-        int rightPWM = leftVolt * 255 / battery.getState(); 
+        rightPWM = rigthVolt * 255 / battery.getVoltState(); 
         motor.setRightSpeed(rightPWM);
       
         if(rightPWM < 0){
@@ -110,6 +112,12 @@ void loop() {
           motor.right.forward();
         }  
       }
+      Serial.print("baterai :");
+      Serial.print(battery.getVoltState());
+      Serial.print(" right: ");
+      Serial.print(rightPWM);
+      Serial.print(" left: ");
+      Serial.println(leftPWM);
     }
   }
 

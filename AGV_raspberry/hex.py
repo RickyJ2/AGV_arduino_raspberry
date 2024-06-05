@@ -55,9 +55,9 @@ def PolarToAxial(distance: float, angle: float, hexagonSize: int) -> tuple:
     r = -p - q
     return (p, q, r)
 
-def AxialToCoord(p: float, q: float, hexagonSize: int) -> tuple:
-    x = hexagonSize * (3/2 * p)
-    y = hexagonSize * (math.sqrt(3)/2 * p + math.sqrt(3) * q)
+def AxialToCoord(q: float, r: float, hexagonSize: int) -> tuple:
+    x = hexagonSize * (3/2 * q)
+    y = hexagonSize * (math.sqrt(3)/2 * q + math.sqrt(3) * r)
     return (x, y)
 
 def HexRound(p: float, q: float, r: float) -> tuple:

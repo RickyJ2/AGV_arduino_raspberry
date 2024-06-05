@@ -1,5 +1,5 @@
 #include "Motor.h"
-#define maxSpeed 250
+#define maxSpeed 255
 #define minSpeed 160
 /*
   Lebar Roda 36mm
@@ -32,8 +32,6 @@ class MotorDriver{
       }
       if(speed > maxSpeed){
         left.setSpeed(maxSpeed);
-      }else if(speed < minSpeed){
-        left.setSpeed(minSpeed);
       }else{
         left.setSpeed(speed);
       } 
@@ -44,8 +42,6 @@ class MotorDriver{
       }
       if(speed > maxSpeed){
         right.setSpeed(maxSpeed);
-      }else if(speed < minSpeed){
-        right.setSpeed(minSpeed);
       }else{
         right.setSpeed(speed);
       } 

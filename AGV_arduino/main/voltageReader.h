@@ -14,6 +14,7 @@ class VoltageReader {
     float lowBat;
     float fullBat;
     int currentPercent;
+    float currentVolt;
   
   public:
     // pinNumber: Analog Pin
@@ -22,6 +23,7 @@ class VoltageReader {
       this-> lowBat = lowBat;
       this-> fullBat = fullBat;
       currentPercent = 100;
+      currentVolt = 8.0;
     }
 
     void init(){
@@ -30,10 +32,14 @@ class VoltageReader {
     
     void updateState(){
       currentPercent = getPercent();
+      currentVolt = getVolt();
     }
 
     int getState(){
       return currentPercent;
+    }
+    float getVoltState(){
+      return currentVolt;
     }
 
     float getVolt(){
