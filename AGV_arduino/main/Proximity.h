@@ -11,7 +11,6 @@ class Proximity {
       pin = pinNumber;
       state = false;
     }
-
     void init(){
       pinMode(pin, INPUT);
       state = isObjectDetected();
@@ -23,11 +22,9 @@ class Proximity {
         state = isObjectDetected();
       }
     }
-    
     bool getState(){
       return state;
     }
-
     bool isObjectDetected() {
       return digitalRead(pin) == LOW;
     }

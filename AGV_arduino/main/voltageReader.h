@@ -23,29 +23,24 @@ class VoltageReader {
       this-> lowBat = lowBat;
       this-> fullBat = fullBat;
       currentPercent = 100;
-      currentVolt = 8.0;
+      currentVolt = fullBat;
     }
-
     void init(){
       updateState();
     }
-    
     void updateState(){
       currentPercent = getPercent();
       currentVolt = getVolt();
     }
-
     int getState(){
       return currentPercent;
     }
     float getVoltState(){
       return currentVolt;
     }
-
     float getVolt(){
       return analogRead(pin) * VccMax / 1023.0 * 2 * VccCorrection;
     }
-
     int getPercent(){
       int percent = round((getVolt() - lowBat)/(fullBat - lowBat) * 100);
       if(percent < 0){

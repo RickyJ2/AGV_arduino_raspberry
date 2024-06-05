@@ -1,3 +1,6 @@
+#define maxSpeed 255
+#define minSpeed 160
+
 class Motor {
   private:
     int enabPin;
@@ -18,10 +21,25 @@ class Motor {
       pinMode(in2, OUTPUT);
     }
     void setSpeed(int speed){
+      if(speed < 0){
+        speed = -1 * speed;
+      }
+      if(speed > maxSpeed){
+        speed = maxSpeed;
+      }
       this->speed = speed;
       analogWrite(enabPin, speed);
     }
-    //Manual Control
+    void move(int pwm){
+      setSpeed(pwm);
+      if(pwm == 0){
+        stop();
+      }else if(pwm < 0){
+        backward();
+      }else{
+        forward();
+      }
+    }
     void forward(){
       digitalWrite(in1, HIGH);
       digitalWrite(in2, LOW);

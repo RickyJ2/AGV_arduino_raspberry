@@ -1,18 +1,13 @@
 #include "Motor.h"
-#define maxSpeed 255
-#define minSpeed 160
 /*
-  Lebar Roda 36mm
-  Jarak antar titik pusat Roda 189mm
-
-  OUT1 OUT4 GND
-  OUT2 OUT3 POS
+  OUT1 OUT4 | GND
+  OUT2 OUT3 | POS
 */
 class MotorDriver{
-  public:
+  private:
     Motor left;
     Motor right;
-    
+  public: 
     MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB){
       this->left = Motor(ENB, IN3, IN4);
       this->right = Motor(ENA, IN1, IN2);
@@ -23,28 +18,12 @@ class MotorDriver{
       setSpeed(0);
     }
     void setSpeed(int speed){
-      setLeftSpeed(speed);
-      setRightSpeed(speed);
+      left.setSpeed(speed);
+      right.setSpeed(speed);
     }
-    void setLeftSpeed(int speed){
-      if(speed < 0){
-        speed = -1 * speed;
-      }
-      if(speed > maxSpeed){
-        left.setSpeed(maxSpeed);
-      }else{
-        left.setSpeed(speed);
-      } 
-    }
-    void setRightSpeed(int speed){
-      if(speed < 0){
-        speed = -1 * speed;
-      }
-      if(speed > maxSpeed){
-        right.setSpeed(maxSpeed);
-      }else{
-        right.setSpeed(speed);
-      } 
+    void move(int leftPWM, int rightPWM){
+      left.move(leftPWM);
+      right.move(rightPWM);
     }
     void forward(){
       left.forward();
