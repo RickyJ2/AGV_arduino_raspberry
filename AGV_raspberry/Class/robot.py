@@ -92,7 +92,6 @@ class Robot:
         self.state = state
 
     def stop(self):
-        print("im here")
         data = {
             "type": "control",
             "left": 0,
