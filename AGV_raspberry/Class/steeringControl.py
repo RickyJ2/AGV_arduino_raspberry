@@ -1,5 +1,5 @@
 import math
-from lyapunovControl import LyapunovControl
+from Class.lyapunovControl import LyapunovControl
 
 class SteeringControl:
     def __init__(self, rightMotorModel, leftMotorModel, width, wheelDiameter, errorTolerance):

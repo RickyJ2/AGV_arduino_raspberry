@@ -1,11 +1,11 @@
 import json
 import math
 import numpy as np
-from util import findOrientation, distance
-from slam import SLAM
-from arduino import Arduino
-from lidar import Lidar
-from steeringControl import SteeringControl
+from Class.util import findOrientation, distance
+from Class.slam import SLAM
+from Class.arduino import Arduino
+from Class.lidar import Lidar
+from Class.steeringControl import SteeringControl
 
 def motorModelRightID01(RPM):
     return np.exp((RPM - 19.52) / 33.90)
@@ -34,7 +34,7 @@ class Robot:
         elif id == 2:
             self.steeringControl = SteeringControl(motorModelRightID02, motorModelLeftID02, self.width, self.wheelDiameter, self.errorTolerance)
         
-        self.startCoordinate = (0,0)
+        self.startCoordinate: tuple[float, float] = (0,0)
         self.goalPointList = []
         self.pathList = []
         self.currentGoal = None
@@ -68,17 +68,22 @@ class Robot:
     def isReachGoal(self):
         currentPos = self.getPos()
         currentPos = (currentPos[0], currentPos[1])
-        return distance(currentPos, self.currentGoal) < self.errorTolerance
+        goal = (self.currentGoal["x"], self.currentGoal["y"])
+        return distance(currentPos, goal) < self.errorTolerance
     
     def isReachTargetPoint(self):
         if self.currentTargetPoint is None:
             return False
         currentPos = self.getPos()
         currentPos = (currentPos[0], currentPos[1])
-        return distance(currentPos, self.currentTargetPoint) < self.errorTolerance
+        targetPoint = (self.currentTargetPoint["x"], self.currentTargetPoint["y"])
+        return distance(currentPos, targetPoint) < self.errorTolerance
 
     def isCurrentPathEmpty(self):
         return len(self.currentPath) == 0
+
+    def isCurrentTargetPointNone(self):
+        return self.currentTargetPoint is None
 
     def stateIs(self, state):
         return self.state == state
@@ -86,9 +91,19 @@ class Robot:
     def updateState(self, state):
         self.state = state
 
+    def stop(self):
+        print("im here")
+        data = {
+            "type": "control",
+            "left": 0,
+            "right": 0,
+        }
+        self.arduino.send(json.dumps(data))
+
     def steerToTargetPoint(self):
         currentPos = self.getPos()
-        LVolt, RVolt = self.steeringControl.compute(currentPos, self.currentTargetPoint)
+        targetPoint = (self.currentTargetPoint["x"], self.currentTargetPoint["y"], self.currentDir)
+        LVolt, RVolt = self.steeringControl.compute(currentPos, targetPoint)
         data = {
             "type": "control",
             "left": LVolt,
@@ -106,12 +121,16 @@ class Robot:
         self.pathList.append(path)
 
     def getRobotState(self):
+        pos = self.getPos()
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
             "orientation": self.getPos()[2],
             "velocity": self.steeringControl.getVelocity(),
-            "position": self.getPos(),
+            "position": {
+                "x": pos[0],
+                "y": pos[1]
+            }
         }
 
     def getPos(self):

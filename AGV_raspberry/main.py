@@ -15,7 +15,7 @@ OBSTACLE_AVOIDANCE = 2
 GO_TO_NEAREST_POINT = 3
 
 header = {
-    'id': ID
+    'id': f'{ID}'
 }
 agv = Robot(ID, IDLE)
 ioloop = IOLoop.current()
@@ -60,17 +60,21 @@ def main():
                 agv.updateNewGoal()
             elif agv.stateIs(FOLLOW_PATH):
                 if agv.isReachGoal():
+                    agv.stop()
                     agv.clearFollowPathParams()
                     logging.info("current state will be IDLE")
                     agv.updateState(IDLE)
                     continue
                 if agv.isReachTargetPoint():
+                    agv.stop()
                     agv.updateTargetPoint()
                     msg = {
                         "type": "notif",
                         "data": "point"
                     }
                     ioloop.add_callback(client.send, json.dumps(msg))
+                elif agv.isCurrentTargetPointNone():
+                    agv.updateTargetPoint()
                 else:
                     agv.steerToTargetPoint()
             elif agv.stateIs(OBSTACLE_AVOIDANCE):

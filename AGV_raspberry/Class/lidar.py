@@ -3,7 +3,7 @@ from time import sleep
 from adafruit_rplidar import RPLidar
 import threading
 import serial.tools.list_ports
-from slam import SLAM
+from Class.slam import SLAM
 
 class Lidar:
     def __init__(self, slam: SLAM):
