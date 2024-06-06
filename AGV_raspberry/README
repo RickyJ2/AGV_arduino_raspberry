@@ -7,6 +7,7 @@ source venv/bin/activate
 # Install the dependencies from the requirement.txt file
 pip install -r requirement.txt
 
+# unpack BreezySLAM.zip
 # Change directory to BreezySLAM/python
 cd BreezySLAM/python
 
