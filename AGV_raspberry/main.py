@@ -1,208 +1,81 @@
 import logging
-import math
-from time import sleep
-from tornado import httpclient
-from client import Client
-from arduino import Arduino
-from lidar import Lidar
 import json
 import threading
+from time import sleep
+from tornado import httpclient
+from Class.client import Client
 from tornado.ioloop import IOLoop, PeriodicCallback
-from hex import Hex, findDirection, AxialToCoord
-from slam import SLAM
-import numpy as np
+from Class.robot import Robot
+from config import ID, IP, PORT
 
-#CONSTANT
-RobotWidth = 189 #mm
-WheelDiameter = 36 #mm
+#CONSTANTS
+IDLE = 0
+FOLLOW_PATH = 1
+OBSTACLE_AVOIDANCE = 2
+GO_TO_NEAREST_POINT = 3
 
-IP = "192.168.85.180"
-PORT = 8080
 header = {
-    'websocketpass':'1234',
-    'id':'1'
+    'id': ID
 }
-goalPointList = []
-pathList = []
-currentGoal = None
-currentPath = []
-currentTargetPoint = None
-currentCoord = Hex(0,0)
-currentDir = 0
-# 0 = idle, 1 = pop point,2 = go-to-point 3 = obstacle avoidance, 4 = go-to-nearest point in path
-globalCoordinate = Hex(0,0)
-state = 0
-previousPos = (0,0,0)
-runMainThread = False
-mainThread = None
+agv = Robot(ID, IDLE)
 ioloop = IOLoop.current()
-
-arduino = Arduino()
-slam = SLAM()
-lidar = Lidar(slam=slam)
 request = httpclient.HTTPRequest(f"ws://{IP}:{PORT}/agv", headers=header)
 client = Client(request, 5)
 
-def LyapunovControl(currentPoint, targetPoint):
-    #point: x, y, theta(radians)
-    errorX = targetPoint[0] - currentPoint[0]
-    errorY = targetPoint[1] - currentPoint[1]
-    errorTheta = targetPoint[2] - currentPoint[2]
-    if abs(errorX) < lidar.hexHeight/2 and abs(errorY) < lidar.hexHeight/2 and abs(errorTheta) < math.radians(180):
-        return 0, 0
-    k1 = 1
-    k2 = 8
-    k3 = 3
-    v = k1 * (errorX * math.cos(currentPoint[2]) + errorY * math.sin(currentPoint[2]))
-    omega = k2 * (-errorX * math.sin(currentPoint[2]) + errorY * math.cos(currentPoint[2])) + k3 * (errorTheta)
-    return v, omega
-
-def saturated(val):
-    if math.floor(val) == 0:
-        return 0
-    times = 1
-    if val < 0:
-        times = -1
-        val *= -1
-    if val > 100:
-        val = 100
-    if val < 60:
-        val = 60
-    return val * times
-
-def steeringControl(currentPoint, targetPoint):
-    #point: x (mm), y (mm), theta(radians)
-    #return left voltage, right voltage
-    v, omega = LyapunovControl(currentPoint, targetPoint)
-    if math.floor(v) == 0  and math.floor(omega) == 0:
-        return 0,0
-    vL = v - omega*RobotWidth/2 #Linear Velocity mm/s
-    vR = v + omega*RobotWidth/2 #Linear Velocity mm/s
-    L = vL * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
-    R = vR * 60 / (math.pi * WheelDiameter) #Angular Velocity RPM
-    L = saturated(L)
-    R = saturated(R)
-    LVolt,RVolt = motorModelLeftID01(L), motorModelRightID01(R)
-    #LVolt, RVolt = motorModelLeftID02(L), motorModelRightID02(R)
-    return LVolt, RVolt
-
-def motorModelRightID01(RPM):
-    return np.exp((RPM - 19.52) / 33.90)
-
-def motorModelLeftID01(RPM):
-    return np.exp((RPM - 33.53) / 25.64)
-
-def motorModelRightID02(RPM):
-    return np.exp((RPM - 25.61) / 28.53)
-
-def motorModelLeftID02(RPM):
-    return np.exp((RPM - 39.93) / 24.37)
+runMainThread = False
+mainThread = None
 
 def clientOnMsg(msg):
-    global state, pathList, goalPointList, globalCoordinate
     if msg is None:
         return
     msg = json.loads(msg)
     logging.info(msg)
-    if msg["type"] == "position":
-        globalCoordinate = Hex(msg["data"]["x"],msg["data"]["y"])
-    elif msg["type"] == "path":
-        goalPointList.append(msg["data"]["goal"])
-        pathList.append(msg["data"]["path"])
-    elif msg["type"] == "new path":
-        pathList.pop(0)
-        #insert on index 0
-        pathList.insert(0, msg["data"]["path"])
-        logging.info("current state will 1")
-        state = 1
-    elif msg["type"] == "stop":
-        goalPointList = []
-        pathList = []
-        logging.info("current state will 0")
-        state = 0
+    type = msg["type"]
+    data = msg["data"]
+    if type == "position":
+        agv.setStartCoordinate(data["x"],data["y"])
+    elif type == "path":
+        agv.insertGoal(data["goal"])
+        agv.insertPath(data["path"])
 
 def sendAGVState():
     msg = {
         "type": "state",
-        "data": {
-            "container": arduino.getContainer(),
-            "power": arduino.getPower(),
-            "localMap": lidar.getLocalMap(),
-            "orientation": lidar.getPos()[2]
-        }
+        "data": agv.getRobotState()
     }
     client.send(json.dumps(msg))
 
 def main():
-    global state, currentGoal, currentPath, goalPointList, pathList, currentCoord, currentTargetPoint, currentDir, previousDistance
+    global runMainThread
     while True:
         if not runMainThread:
             break
         try:
-            #if idle state set new goal and path
-            if state == 0:
-                if len(goalPointList) == 0:
+            if agv.stateIs(IDLE):
+                if agv.noGoal():
                     continue
                 #set to new goal point
-                state = 1
-                logging.info("current state will 1")
-                currentGoal = goalPointList.pop(0)
-                currentPath = pathList.pop(0)
-                currentCoord = Hex(0,0)
-            elif state == 1:
-                #if no path left set state to idle
-                logging.info(f"current path: {currentPath}")
-                if len(currentPath) == 0:
-                    logging.info("current state will 0")
-                    state = 0
-                    logging.info(f"current goal list: {goalPointList}")
+                agv.updateState(FOLLOW_PATH)
+                logging.info("current state will be FOLLOW_PATH")
+                agv.updateNewGoal()
+            elif agv.stateIs(FOLLOW_PATH):
+                if agv.isReachGoal():
+                    agv.clearFollowPathParams()
+                    logging.info("current state will be IDLE")
+                    agv.updateState(IDLE)
                     continue
-                #transition to new point in path
-                point = currentPath.pop(0)
-                currentTargetPoint = Hex(point[0],point[1])
-                currentDir = findDirection(currentTargetPoint - currentCoord)
-                dir = currentDir * 60
-                targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
-                curPos = lidar.getPos()
-                Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
-                logging.info(f"target: {dir}")
-                data = {
-                    "type": "control",
-                    "left": Lvolt,
-                    "right": Rvolt,
-                }
-                arduino.send(json.dumps(data))
-                logging.info("current state will 2")
-                state = 2
-            elif state == 2:
-                sleep(0.05)
-                targetPoint = AxialToCoord(currentTargetPoint.q, currentTargetPoint.r, lidar.hexHeight)
-                curPos = lidar.getPos()
-                logging.error(f"current Position: ({curPos[0]}, {curPos[1]}) targetPoint: {targetPoint}")
-                Lvolt, Rvolt = steeringControl(curPos, (targetPoint[0], targetPoint[1], math.radians(dir)))
-                data = {
-                    "type": "control",
-                    "left": Lvolt,
-                    "right": Rvolt,
-                }
-                arduino.send(json.dumps(data))
-                if Lvolt == 0 and Rvolt == 0:
-                    state = 3
-                    logging.info("current state will 3")
+                if agv.isReachTargetPoint():
+                    agv.updateTargetPoint()
                     msg = {
                         "type": "notif",
                         "data": "point"
                     }
                     ioloop.add_callback(client.send, json.dumps(msg))
-            elif state == 3:
-                #reached target point in path
-                logging.info("in state 3")
-                currentCoord = currentTargetPoint
-                logging.info("current state will 1")
-                state = 1
-            elif state == 4:
+                else:
+                    agv.steerToTargetPoint()
+            elif agv.stateIs(OBSTACLE_AVOIDANCE):
                 pass
-            elif state == 5:
+            elif agv.stateIs(GO_TO_NEAREST_POINT):
                 pass
         except Exception as e:
             logging.error(f"Main Error: {e}")
@@ -210,13 +83,13 @@ def main():
 def errorHandler():
     global runMainThread, mainThread
     runMainThread = False
-    mainThread.join()
+    if mainThread is not None:
+        mainThread.join()
     ioloop.stop()
+    agv.stop()
     client.closeConnection()
-    arduino.close()
-    lidar.stop()
 
-if __name__ == "__main__":
+def configLogger():
     logFormatter = logging.Formatter('[%(levelname)s]\t[%(asctime)s]: %(message)s', datefmt='%d-%m-%Y %H:%M:%S')
     #fileHandler for Logging
     try:
@@ -234,15 +107,17 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
+
+if __name__ == "__main__":
+    configLogger()
     logging.info("Program Start")
     try:
-        lidar.start()
-        arduino.start()
+        agv.init()
         sleep(10)
-        client.connect(clientOnMsg)
         runMainThread = True
-        mainThread = threading.Thread(target=main,name="main", daemon=True)
+        mainThread = threading.Thread(target=main, name="Main", daemon=True)
         mainThread.start()
+        client.connect(clientOnMsg)
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()
     except KeyboardInterrupt:

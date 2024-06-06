@@ -12,14 +12,7 @@ class Arduino:
         self.ser = None
         #init variable
         self.container = False
-        self.orientation = 90 #yaw
-        self.acceleration = {
-            "x": 0,
-            "y": 0,
-        }
         self.power = 100
-
-        self.statuspoint = False
     
     def connect(self):
         try:
@@ -67,15 +60,9 @@ class Arduino:
                     data = msg["data"]
                     # logging.info(f"arduino state {data}")
                     self.container = data['container']
-                    self.orientation = data['orientation']
-                    self.acceleration = data['acceleration']
                     self.power = data['power']
-                elif msg["type"] == "notif":
-                    data = msg["data"]
-                    self.statuspoint = True
-                    logging.info(f"Arduino notif: {data}")
                 else:
-                    logging.info(f"Arduino msg: {msg}")
+                    logging.debug(f"Arduino msg: {msg}")
             except Exception as e:
                 logging.error(f"Arduino Error: {e} msg: {buffer}")
                 if not self.ser.is_open:
@@ -89,40 +76,11 @@ class Arduino:
         except Exception as e:
             logging.error(f"Arduino send error: {e}")
 
-    def moveForward(self):
-        cmd = {
-            "type": "move",
-            "data": "1"
-        }
-        self.send(cmd)
-    def moveLeft(self):
-        cmd = {
-            "type": "move",
-            "data": "2"
-        }
-        self.send(cmd)
-    def moveRight(self):
-        cmd = {
-            "type": "move",
-            "data": "3"
-        }
-        self.send(cmd)
-    def moveBackward(self):
-        cmd = {
-            "type": "move",
-            "data": "4"
-        }
-        self.send(cmd)
-    def stop(self):
-        cmd = {
-            "type": "move",
-            "data": "0"
-        }
-        self.send(cmd)
     def close(self):
         try:
             self.runThread = False
-            self.thread_read.join()
+            if not (self.thread_read is None):
+                self.thread_read.join()
             if not (self.ser is None):
                 self.ser.close()
         except Exception as e:
@@ -130,12 +88,6 @@ class Arduino:
 
     def getContainer(self):
         return self.container
-
-    def getOrientation(self):
-        return self.orientation
-
-    def getAcceleration(self):
-        return self.acceleration
     
     def getPower(self):
         return self.power

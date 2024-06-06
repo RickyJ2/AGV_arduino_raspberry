@@ -1,28 +1,24 @@
 import logging
-import math
 from time import sleep
-from adafruit_rplidar import RPLidar, RPLidarException
+from adafruit_rplidar import RPLidar
 import threading
-from map import Map
-from hex import HexRound, PolarToAxial
 import serial.tools.list_ports
+from slam import SLAM
 
 class Lidar:
-    def __init__(self, slam):
+    def __init__(self, slam: SLAM):
         self.port = None
         self.lidar = None
-        self.map = Map()
         self.res_scan = []
         self.slam = slam
         #in mm
         self.max_distance = 12000
         self.min_distance = 50
-        self.hexHeight = 350
     
     def checkHealth(self):
-        if self.lidar.health[1] == 0 : 
+        if self.lidar.health[1] == 0: 
             return True
-        else :
+        else:
             return False
 
     def connect(self):
@@ -33,9 +29,6 @@ class Lidar:
             self.lidar = RPLidar(None, self.port, timeout=3)
             sleep(3)
             logging.info(f"Lidar connected : {self.lidar.info}") 
-        except RPLidarException as e:
-            logging.error(f"Lidar connection failed: {e}")
-            sleep(5)
         except Exception as e:
             logging.error(f"Lidar connection failed: {e}")
             sleep(5)
@@ -81,73 +74,17 @@ class Lidar:
                     angles = [item[1] for item in items]
                     self.slam.update(distances, angles)
                     self.res_scan = scan
-                    self.convertToHex()
                     sleep(0.001)
-            except RPLidarException as e:
+            except Exception as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
                 sleep(5)
-
-    def convertToHex(self):
-        self.map.clearMap()
-        for _,angle, distance in self.res_scan:
-            p, q, r = PolarToAxial(distance, angle, self.hexHeight)
-            p, q, r = HexRound(p, q, r)
-            self.map.addObstacle(p, q)
-
-    def getLocalMap(self):
-        obstacles = self.map.getObstacles()
-        for i in range(len(obstacles)):
-            obstacles[i] = {'x': obstacles[i].q, 'y': obstacles[i].r}
-        return obstacles
-    
-    def getPos(self):
-        pose = self.slam.getPos()
-        orientation = pose[2]
-        if orientation > 0:
-            orientation += 90
-            orientation = orientation % 360
-        else:
-            orientation = (90 + orientation) * -1
-            orientation = orientation % 360
-            orientation = 360 - orientation
-        lst = list(pose)
-        lst[0] *= -1
-        lst[1] *= -1
-        lst[0] += 5000
-        lst[1] += 5000
-        lst[2] = math.radians(orientation)
-        pose = tuple(lst)
-        return pose
-
-    def getFront(self):
-        total = 0
-        count = 0
-        for i in range(80, 100):
-            if self.res_scan[i] == 0:
-                continue
-            total += self.res_scan[i]
-            count += 1
-        if total == 0:
-            return 0
-        return total / count
-
-    def getBack(self):
-        total = 0
-        count = 0
-        for i in range(260, 280):
-            if self.res_scan[i] == 0:
-                continue
-            total += self.res_scan[i]
-            count += 1
-        if total == 0:
-            return 0
-        return total / count
         
     def stop(self):
         try:
             self.runThread = False
-            self.thread.join()
+            if not (self.thread is None):
+                self.thread.join()
             if not (self.lidar is None):
                 self.lidar.stop()
                 self.lidar.disconnect() 

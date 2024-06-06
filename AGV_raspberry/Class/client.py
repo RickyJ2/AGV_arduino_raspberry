@@ -1,12 +1,12 @@
 import logging
 from tornado import gen
-from tornado.websocket import websocket_connect, WebSocketClosedError
+from tornado.websocket import websocket_connect, WebSocketClosedError, WebSocketClientConnection
 
 class Client(object):
     def __init__(self, url, timeout):
         self.url = url
         self.timeout = timeout
-        self.ws = None
+        self.ws: WebSocketClientConnection = None
         self.tryingConnecting = False
         self.msg = []
 
