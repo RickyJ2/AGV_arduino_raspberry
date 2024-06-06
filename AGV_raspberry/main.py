@@ -7,6 +7,7 @@ from Class.client import Client
 from tornado.ioloop import IOLoop, PeriodicCallback
 from Class.robot import Robot
 from config import ID, IP, PORT
+from Class.point import dictToPoint
 
 #CONSTANTS
 IDLE = 0
@@ -33,10 +34,10 @@ def clientOnMsg(msg):
     type = msg["type"]
     data = msg["data"]
     if type == "position":
-        agv.setStartCoordinate(data["x"],data["y"])
+        agv.setStartCoordinate(dictToPoint(data))
     elif type == "path":
-        agv.insertGoal(data["goal"])
-        agv.insertPath(data["path"])
+        agv.insertGoal(dictToPoint(data["goal"]))
+        agv.insertPath(map(dictToPoint, data["path"]))
 
 def sendAGVState():
     msg = {
@@ -53,26 +54,26 @@ def main():
         try:
             if agv.stateIs(IDLE):
                 if agv.noGoal():
+                    if agv.steeringControl.currentVelocity != 0:
+                        agv.stop()
                     continue
                 #set to new goal point
                 agv.updateState(FOLLOW_PATH)
                 logging.info("current state will be FOLLOW_PATH")
                 agv.updateNewGoal()
             elif agv.stateIs(FOLLOW_PATH):
-                if agv.isReachGoal():
-                    agv.stop()
-                    agv.clearFollowPathParams()
-                    logging.info("current state will be IDLE")
-                    agv.updateState(IDLE)
-                    continue
                 if agv.isReachTargetPoint():
                     agv.stop()
                     agv.updateTargetPoint()
                     msg = {
                         "type": "notif",
-                        "data": "point"
                     }
                     ioloop.add_callback(client.send, json.dumps(msg))
+                    if agv.isReachGoal():
+                        agv.clearFollowPathParams()
+                        logging.info("current state will be IDLE")
+                        agv.updateState(IDLE)
+                        continue
                 elif agv.isCurrentTargetPointNone():
                     agv.updateTargetPoint()
                 else:
@@ -117,10 +118,11 @@ if __name__ == "__main__":
     logging.info("Program Start")
     try:
         agv.init()
-        sleep(10)
         runMainThread = True
         mainThread = threading.Thread(target=main, name="Main", daemon=True)
         mainThread.start()
+        sleep(10)
+        logging.info("Finish starting up...")
         client.connect(clientOnMsg)
         PeriodicCallback(sendAGVState, 1000).start()
         ioloop.start()

@@ -1,4 +1,5 @@
 import math
+from Class.pose import Pose
 
 class LyapunovControl:
     def __init__(self, k1, k2, k3, tolerance):
@@ -7,13 +8,10 @@ class LyapunovControl:
         self.k3 = k3
         self.tolerance = tolerance
     
-    def compute(self, currentPoint, targetPoint):
-        #point: x, y, theta(radians)
-        errorX = targetPoint[0] - currentPoint[0]
-        errorY = targetPoint[1] - currentPoint[1]
-        errorTheta = targetPoint[2] - currentPoint[2]
-        if abs(errorX) < self.tolerance and abs(errorY) < self.tolerance and abs(errorTheta) < math.radians(180):
+    def compute(self, currentPoint: Pose, targetPoint: Pose):
+        error = targetPoint - currentPoint
+        if abs(error.point.x) < self.tolerance and abs(error.point.y) < self.tolerance and abs(error.orientation) < math.radians(180):
             return 0, 0
-        v = self.k1 * (errorX * math.cos(currentPoint[2]) + errorY * math.sin(currentPoint[2]))
-        omega = self.k2 * (-errorX * math.sin(currentPoint[2]) + errorY * math.cos(currentPoint[2])) + self.k3 * (errorTheta)
+        v = self.k1 * (error.point.x * math.cos(currentPoint.orientation) + error.point.y * math.sin(currentPoint.orientation))
+        omega = self.k2 * (-error.point.x * math.sin(currentPoint.orientation) + error.point.y * math.cos(currentPoint.orientation)) + self.k3 * (error.orientation)
         return v, omega

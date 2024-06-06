@@ -1,11 +1,13 @@
 import json
 import math
 import numpy as np
-from Class.util import findOrientation, distance
+from Class.point import Point
+from Class.pose import Pose
 from Class.slam import SLAM
 from Class.arduino import Arduino
 from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
+from Class.util import distance, findOrientation
 
 def motorModelRightID01(RPM):
     return np.exp((RPM - 19.52) / 33.90)
@@ -30,16 +32,16 @@ class Robot:
         self.slam: SLAM = SLAM()
         self.lidar: Lidar = Lidar(slam = self.slam)
         if id == 1:
-            self.steeringControl = SteeringControl(motorModelRightID01, motorModelLeftID01, self.width, self.wheelDiameter, self.errorTolerance)
+            self.steeringControl: SteeringControl = SteeringControl(motorModelRightID01, motorModelLeftID01, self.width, self.wheelDiameter, self.errorTolerance)
         elif id == 2:
-            self.steeringControl = SteeringControl(motorModelRightID02, motorModelLeftID02, self.width, self.wheelDiameter, self.errorTolerance)
+            self.steeringControl: SteeringControl = SteeringControl(motorModelRightID02, motorModelLeftID02, self.width, self.wheelDiameter, self.errorTolerance)
         
-        self.startCoordinate: tuple[float, float] = (0,0)
-        self.goalPointList = []
-        self.pathList = []
-        self.currentGoal = None
-        self.currentPath = []
-        self.currentTargetPoint = None
+        self.startCoordinate: Point = Point(0,0)
+        self.goalPointList: list[Point] = []
+        self.pathList: list[list[Point]] = []
+        self.currentGoal: Point = None
+        self.currentPath: list[Point] = []
+        self.currentTargetPose: Pose = None
         self.state = state
     
     def init(self):
@@ -47,7 +49,7 @@ class Robot:
         self.lidar.start()
     
     def clearFollowPathParams(self):
-        self.currentTargetPoint = None
+        self.currentTargetPose = None
         self.currentGoal = None
         self.currentPath = []
 
@@ -59,31 +61,29 @@ class Robot:
         self.currentPath = self.pathList.pop(0)
 
     def updateTargetPoint(self):
-        self.currentTargetPoint = self.currentPath.pop(0)
         if len(self.currentPath) == 0:
-            self.currentDir = 90
+            return
+        self.currentTargetPose = Pose(self.currentPath.pop(0), 0)
+        if len(self.currentPath) == 0:
+            self.currentTargetPose.orientation = 90
         else:
-            self.currentDir = findOrientation(self.currentPath[0] - self.currentTargetPoint)
+            self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
 
     def isReachGoal(self):
-        currentPos = self.getPos()
-        currentPos = (currentPos[0], currentPos[1])
-        goal = (self.currentGoal["x"], self.currentGoal["y"])
-        return distance(currentPos, goal) < self.errorTolerance
+        currentPos: Pose = self.getPos()
+        return distance(currentPos, self.currentGoal) < self.errorTolerance
     
     def isReachTargetPoint(self):
-        if self.currentTargetPoint is None:
+        if self.currentTargetPose is None:
             return False
-        currentPos = self.getPos()
-        currentPos = (currentPos[0], currentPos[1])
-        targetPoint = (self.currentTargetPoint["x"], self.currentTargetPoint["y"])
-        return distance(currentPos, targetPoint) < self.errorTolerance
+        currentPos:Pose = self.getPos()
+        return distance(currentPos, self.currentTargetPose) < self.errorTolerance
 
     def isCurrentPathEmpty(self):
         return len(self.currentPath) == 0
 
     def isCurrentTargetPointNone(self):
-        return self.currentTargetPoint is None
+        return self.currentTargetPose is None
 
     def stateIs(self, state):
         return self.state == state
@@ -92,6 +92,7 @@ class Robot:
         self.state = state
 
     def stop(self):
+        self.steeringControl.currentVelocity = 0
         data = {
             "type": "control",
             "left": 0,
@@ -101,8 +102,7 @@ class Robot:
 
     def steerToTargetPoint(self):
         currentPos = self.getPos()
-        targetPoint = (self.currentTargetPoint["x"], self.currentTargetPoint["y"], self.currentDir)
-        LVolt, RVolt = self.steeringControl.compute(currentPos, targetPoint)
+        LVolt, RVolt = self.steeringControl.compute(currentPos, self.currentTargetPose)
         data = {
             "type": "control",
             "left": LVolt,
@@ -110,26 +110,23 @@ class Robot:
         }
         self.arduino.send(json.dumps(data))
 
-    def setStartCoordinate(self, x, y):
-        self.startCoordinate = (x,y)
+    def setStartCoordinate(self, point: Point):
+        self.startCoordinate = point
     
-    def insertGoal(self, goal):
+    def insertGoal(self, goal: Point):
         self.goalPointList.append(goal)
 
-    def insertPath(self, path):
+    def insertPath(self, path: list[Point]):
         self.pathList.append(path)
 
     def getRobotState(self):
-        pos = self.getPos()
+        pos: Pose = self.getPos()
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
-            "orientation": self.getPos()[2],
+            "orientation": pos.orientation,
             "velocity": self.steeringControl.getVelocity(),
-            "position": {
-                "x": pos[0],
-                "y": pos[1]
-            }
+            "position": pos.point.toDict()
         }
 
     def getPos(self):
@@ -145,11 +142,10 @@ class Robot:
         lst = list(pose)
         lst[0] *= -1
         lst[1] *= -1
-        lst[0] += 5000 + self.startCoordinate[0]
-        lst[1] += 5000 + self.startCoordinate[1]
+        lst[0] += 5000 + self.startCoordinate.x
+        lst[1] += 5000 + self.startCoordinate.y
         lst[2] = math.radians(orientation)
-        pose = tuple(lst)
-        return pose
+        return Pose(Point(lst[0], lst[1]), lst[2])
     
     def stop(self):
         self.arduino.close()

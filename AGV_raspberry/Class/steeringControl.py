@@ -1,5 +1,6 @@
 import math
 from Class.lyapunovControl import LyapunovControl
+from Class.pose import Pose
 
 class SteeringControl:
     def __init__(self, rightMotorModel, leftMotorModel, width, wheelDiameter, errorTolerance):
@@ -25,9 +26,7 @@ class SteeringControl:
             val = self.minRPM
         return val * times
     
-    def compute(self, currentPoint, targetPoint):
-        #point: x (mm), y (mm), theta(radians)
-        #return left voltage, right voltage
+    def compute(self, currentPoint: Pose, targetPoint: Pose):
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
         if math.floor(v) == 0  and math.floor(omega) == 0:
             self.currentVelocity = 0
