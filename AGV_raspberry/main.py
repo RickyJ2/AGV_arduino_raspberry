@@ -36,8 +36,9 @@ def clientOnMsg(msg):
     if type == "position":
         agv.setStartCoordinate(dictToPoint(data))
     elif type == "path":
+        path = map(dictToPoint, data["path"])
         agv.insertGoal(dictToPoint(data["goal"]))
-        agv.insertPath(map(dictToPoint, data["path"]))
+        agv.insertPath(list(path))
 
 def sendAGVState():
     msg = {
@@ -55,7 +56,7 @@ def main():
             if agv.stateIs(IDLE):
                 if agv.noGoal():
                     if agv.steeringControl.currentVelocity != 0:
-                        agv.stop()
+                        agv.stopMoving()
                     continue
                 #set to new goal point
                 agv.updateState(FOLLOW_PATH)
@@ -63,7 +64,7 @@ def main():
                 agv.updateNewGoal()
             elif agv.stateIs(FOLLOW_PATH):
                 if agv.isReachTargetPoint():
-                    agv.stop()
+                    agv.stopMoving()
                     agv.updateTargetPoint()
                     msg = {
                         "type": "notif",

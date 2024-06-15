@@ -91,7 +91,7 @@ class Robot:
     def updateState(self, state):
         self.state = state
 
-    def stop(self):
+    def stopMoving(self):
         self.steeringControl.currentVelocity = 0
         data = {
             "type": "control",
