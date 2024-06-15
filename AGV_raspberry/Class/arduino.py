@@ -9,9 +9,9 @@ class Arduino:
     def __init__(self, baudrate = 9600):
         self.port = None
         self.baudrate = baudrate
-        self.ser = None
+        self.ser: serial.Serial = None
         #init variable
-        self.container = False
+        self.container: bool = False
         self.power = 100
     
     def connect(self):
@@ -29,7 +29,7 @@ class Arduino:
             logging.error(f"Arduino's connection Failed: {e}")
             sleep(5)
 
-    def find_arduino_port(self):
+    def find_arduino_port(self) -> bool:
         ports = list(serial.tools.list_ports.comports())
         for p in ports:
             if p.pid == 29987:
@@ -86,8 +86,8 @@ class Arduino:
         except Exception as e:
             logging.error(f"Arduino Error: {e}")
 
-    def getContainer(self):
+    def getContainer(self) -> bool:
         return self.container
     
-    def getPower(self):
+    def getPower(self) -> int:
         return self.power

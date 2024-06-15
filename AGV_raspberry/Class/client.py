@@ -7,8 +7,7 @@ class Client(object):
         self.url = url
         self.timeout = timeout
         self.ws: WebSocketClientConnection = None
-        self.tryingConnecting = False
-        self.msg = []
+        self.tryingConnecting : bool = False
 
     @gen.coroutine
     def connect(self, onMsg = None):

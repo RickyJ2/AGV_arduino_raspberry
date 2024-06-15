@@ -8,7 +8,7 @@ class LyapunovControl:
         self.k3 = k3
         self.tolerance = tolerance
     
-    def compute(self, currentPoint: Pose, targetPoint: Pose):
+    def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         error = targetPoint - currentPoint
         if abs(error.point.x) < self.tolerance and abs(error.point.y) < self.tolerance and abs(error.orientation) < math.radians(180):
             return 0, 0

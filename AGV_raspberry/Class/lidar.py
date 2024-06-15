@@ -8,15 +8,14 @@ from Class.slam import SLAM
 class Lidar:
     def __init__(self, slam: SLAM):
         self.port = None
-        self.lidar = None
-        self.res_scan = []
-        self.slam = slam
+        self.lidar: RPLidar = None
+        self.slam: SLAM = slam
         #in mm
         self.max_distance = 12000
         self.min_distance = 50
-        self.corners = []
+        self.corners: list[tuple] = []
     
-    def checkHealth(self):
+    def checkHealth(self) -> bool:
         if self.lidar.health[1] == 0: 
             return True
         else:
@@ -34,7 +33,7 @@ class Lidar:
             logging.error(f"Lidar connection failed: {e}")
             sleep(5)
     
-    def find_lidar_port(self):
+    def find_lidar_port(self) -> bool:
         ports = list(serial.tools.list_ports.comports())
         for p in ports:
             if p.pid == 60000:
@@ -75,14 +74,13 @@ class Lidar:
                     distances = [item[2] for item in items]
                     angles = [item[1] for item in items]
                     self.slam.update(distances, angles)
-                    self.res_scan = scan
                     sleep(0.001)
             except Exception as e:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
                 sleep(5)
     
-    def findCorners(self, scan):
+    def findCorners(self, scan) -> list[tuple]:
         diffList = []
         sumDiff = 0
         for i in range(1, len(scan)):

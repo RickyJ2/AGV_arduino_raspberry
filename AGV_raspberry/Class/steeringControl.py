@@ -3,17 +3,17 @@ from Class.lyapunovControl import LyapunovControl
 from Class.pose import Pose
 
 class SteeringControl:
-    def __init__(self, rightMotorModel, leftMotorModel, width, wheelDiameter, errorTolerance):
-        self.rightMotorModel = rightMotorModel
-        self.leftMotorModel = leftMotorModel
+    def __init__(self, rightMotorModel: function, leftMotorModel: function, width, wheelDiameter, errorTolerance):
+        self.rightMotorModel: function  = rightMotorModel
+        self.leftMotorModel: function = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        self.lyapunovControl = LyapunovControl(1, 8, 3, errorTolerance)
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 8, 3, errorTolerance)
         self.maxRPM = 90
         self.minRPM = 60
         self.currentVelocity = 0
     
-    def saturated(self, leftRPM, rightRPM):
+    def saturated(self, leftRPM, rightRPM) -> tuple[float, float]:
         if math.floor(leftRPM) == 0 and math.floor(rightRPM) == 0:
             return 0,0
         timesLeft = 1
@@ -43,7 +43,7 @@ class SteeringControl:
             rightRPM = self.minRPM
         return leftRPM * timesLeft, rightRPM * timesRight
     
-    def compute(self, currentPoint: Pose, targetPoint: Pose):
+    def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
         if math.floor(v) == 0  and math.floor(omega) == 0:
             self.currentVelocity = 0
@@ -58,7 +58,7 @@ class SteeringControl:
         RVolt = self.rightMotorModel(R)
         return LVolt, RVolt
 
-    def getVelocity(self):
+    def getVelocity(self) -> float:
         return self.currentVelocity
 
     

@@ -9,16 +9,16 @@ from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
 from Class.util import distance, findOrientation
 
-def motorModelRightID01(RPM):
+def motorModelRightID01(RPM) -> float:
     return np.exp((RPM - 19.52) / 33.90)
 
-def motorModelLeftID01(RPM):
+def motorModelLeftID01(RPM) -> float:
     return np.exp((RPM - 33.53) / 25.64)
 
-def motorModelRightID02(RPM):
+def motorModelRightID02(RPM) -> float:
     return np.exp((RPM - 25.61) / 28.53)
 
-def motorModelLeftID02(RPM):
+def motorModelLeftID02(RPM) -> float:
     return np.exp((RPM - 39.93) / 24.37)
 
 class Robot:
@@ -53,7 +53,7 @@ class Robot:
         self.currentGoal = None
         self.currentPath = []
 
-    def noGoal(self):
+    def noGoal(self) -> bool:
         return len(self.goalPointList) == 0
 
     def updateNewGoal(self):
@@ -69,23 +69,23 @@ class Robot:
         else:
             self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
 
-    def isReachGoal(self):
+    def isReachGoal(self) -> bool:
         currentPos: Pose = self.getPos()
         return distance(currentPos, self.currentGoal) < self.errorTolerance
     
-    def isReachTargetPoint(self):
+    def isReachTargetPoint(self) -> bool:
         if self.currentTargetPose is None:
             return False
         currentPos:Pose = self.getPos()
         return distance(currentPos, self.currentTargetPose) < self.errorTolerance
 
-    def isCurrentPathEmpty(self):
+    def isCurrentPathEmpty(self) -> bool:
         return len(self.currentPath) == 0
 
-    def isCurrentTargetPointNone(self):
+    def isCurrentTargetPointNone(self) -> bool:
         return self.currentTargetPose is None
 
-    def stateIs(self, state):
+    def stateIs(self, state) -> bool:
         return self.state == state
 
     def updateState(self, state):
@@ -119,18 +119,20 @@ class Robot:
     def insertPath(self, path: list[Point]):
         self.pathList.append(path)
 
-    def getRobotState(self):
+    def getRobotState(self) -> dict:
         pos: Pose = self.getPos()
+        cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
+        cornerXY = [point.toDict() for point in cornerXY]
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
             "orientation": pos.orientation,
             "velocity": self.steeringControl.getVelocity(),
             "position": pos.point.toDict(),
-            "corners": self.convertCornersToGlobal(self.lidar.corners),
+            "corners": cornerXY,
         }
 
-    def getPos(self):
+    def getPos(self) -> Pose:
         pose = self.slam.getPos()
         orientation = pose[2]
         if orientation > 0:
@@ -148,9 +150,9 @@ class Robot:
         lst[2] = math.radians(orientation)
         return Pose(Point(lst[0], lst[1]), lst[2])
 
-    def convertCornersToGlobal(self, corners):
+    def convertCornersToGlobal(self, corners: list[tuple]) -> list[Point]:
         currentPos: Pose = self.getPos()
-        globalCorners = []
+        globalCorners: list[Point] = []
         for corner in corners:
             angleRad = math.radians(corner[1]) + currentPos.orientation
             x = corner[2] * math.cos(angleRad) + currentPos.point.x
