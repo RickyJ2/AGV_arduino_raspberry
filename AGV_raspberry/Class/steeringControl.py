@@ -9,22 +9,39 @@ class SteeringControl:
         self.width = width
         self.wheelDiameter = wheelDiameter
         self.lyapunovControl = LyapunovControl(1, 8, 3, errorTolerance)
-        self.maxRPM = 100
+        self.maxRPM = 90
         self.minRPM = 60
         self.currentVelocity = 0
     
-    def saturated(self, val):
-        if math.floor(val) == 0:
-            return 0
-        times = 1
-        if val < 0:
-            times = -1
-            val *= -1
-        if val > self.maxRPM:
-            val = self.maxRPM
-        if val < self.minRPM:
-            val = self.minRPM
-        return val * times
+    def saturated(self, leftRPM, rightRPM):
+        if math.floor(leftRPM) == 0 and math.floor(rightRPM) == 0:
+            return 0,0
+        timesLeft = 1
+        timesRight = 1
+        if leftRPM < 0:
+            timesLeft = -1
+            leftRPM *= -1
+        if rightRPM < 0:
+            timesRight = -1
+            rightRPM *= -1
+        #upper bounding
+        if leftRPM > self.maxRPM and rightRPM > self.maxRPM:
+            if leftRPM > rightRPM:
+                rightRPM *= self.maxRPM / rightRPM
+                leftRPM = self.maxRPM
+            else:
+                leftRPM *= self.maxRPM / leftRPM
+                rightRPM = self.maxRPM
+        if leftRPM > self.maxRPM:
+            leftRPM = self.maxRPM
+        if rightRPM > self.maxRPM:
+            rightRPM = self.maxRPM
+        #lower bounding
+        if leftRPM < self.minRPM:
+            leftRPM = self.minRPM
+        if rightRPM < self.minRPM:
+            rightRPM = self.minRPM
+        return leftRPM * timesLeft, rightRPM * timesRight
     
     def compute(self, currentPoint: Pose, targetPoint: Pose):
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
@@ -36,8 +53,7 @@ class SteeringControl:
         vR = v + omega*self.width/2 #Linear Velocity mm/s
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         R = vR * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
-        L = self.saturated(L)
-        R = self.saturated(R)
+        L, R = self.saturated(L, R)
         LVolt = self.leftMotorModel(L)
         RVolt = self.rightMotorModel(R)
         return LVolt, RVolt
