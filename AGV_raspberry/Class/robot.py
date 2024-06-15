@@ -126,7 +126,8 @@ class Robot:
             "power": self.arduino.getPower(),
             "orientation": pos.orientation,
             "velocity": self.steeringControl.getVelocity(),
-            "position": pos.point.toDict()
+            "position": pos.point.toDict(),
+            "corners": self.convertCornersToGlobal(self.lidar.corners),
         }
 
     def getPos(self):
@@ -146,6 +147,16 @@ class Robot:
         lst[1] += 5000 + self.startCoordinate.y
         lst[2] = math.radians(orientation)
         return Pose(Point(lst[0], lst[1]), lst[2])
+
+    def convertCornersToGlobal(self, corners):
+        currentPos: Pose = self.getPos()
+        globalCorners = []
+        for corner in corners:
+            angleRad = math.radians(corner[1]) + currentPos.orientation
+            x = corner[2] * math.cos(angleRad) + currentPos.point.x
+            y = corner[2] * math.sin(angleRad) + currentPos.point.y
+            globalCorners.append(Point(x, y))
+        return globalCorners
     
     def stop(self):
         self.arduino.close()
