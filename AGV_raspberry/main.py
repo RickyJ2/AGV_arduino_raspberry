@@ -7,7 +7,7 @@ from Class.client import Client
 from tornado.ioloop import IOLoop, PeriodicCallback
 from Class.robot import Robot
 from config import ID, IP, PORT
-from Class.point import dictToPoint
+from Class.point import Point, dictToPoint
 
 #CONSTANTS
 IDLE = 0
@@ -39,6 +39,10 @@ def clientOnMsg(msg):
         path = map(dictToPoint, data["path"])
         agv.insertGoal(dictToPoint(data["goal"]))
         agv.insertPath(list(path))
+    elif type == "newPath":
+        path = map(dictToPoint, data["path"])
+        agv.changeCurrentPath(list(path))
+        agv.updateState(FOLLOW_PATH)
 
 def sendAGVState():
     msg = {
@@ -46,6 +50,19 @@ def sendAGVState():
         "data": agv.getRobotState()
     }
     client.send(json.dumps(msg))
+
+def sendNotifReachPoint():
+    msg = {
+        "type": "notif",
+    }
+    ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
+
+def sendNotifCollided(listObs: list[Point]):
+    msg = {
+        "type": "collision",
+        "data": [point.toDict() for point in listObs]
+    }
+    ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
 
 def main():
     global runMainThread
@@ -60,19 +77,20 @@ def main():
                     continue
                 #set to new goal point
                 agv.updateState(FOLLOW_PATH)
-                logging.info("current state will be FOLLOW_PATH")
                 agv.updateNewGoal()
             elif agv.stateIs(FOLLOW_PATH):
+                listObs = agv.getCollideObstacle()
+                if len(listObs) > 0:
+                    sendNotifCollided(listObs)
+                    agv.stopMoving()
+                    agv.updateState(OBSTACLE_AVOIDANCE)
+                    continue
                 if agv.isReachTargetPoint():
                     agv.stopMoving()
                     agv.updateTargetPoint()
-                    msg = {
-                        "type": "notif",
-                    }
-                    ioloop.add_callback(client.send, json.dumps(msg))
+                    sendNotifReachPoint()
                     if agv.isReachGoal():
                         agv.clearFollowPathParams()
-                        logging.info("current state will be IDLE")
                         agv.updateState(IDLE)
                         continue
                 elif agv.isCurrentTargetPointNone():

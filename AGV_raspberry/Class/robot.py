@@ -1,6 +1,7 @@
 import json
 import math
 import numpy as np
+import logging
 from Class.point import Point
 from Class.pose import Pose
 from Class.slam import SLAM
@@ -8,6 +9,7 @@ from Class.arduino import Arduino
 from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
 from Class.util import distance, findOrientation
+from main import FOLLOW_PATH
 
 def motorModelRightID01(RPM) -> float:
     return np.exp((RPM - 19.52) / 33.90)
@@ -60,6 +62,10 @@ class Robot:
         self.currentGoal = self.goalPointList.pop(0)
         self.currentPath = self.pathList.pop(0)
 
+    def changeCurrentPath(self, path: list[Point]):
+        self.currentPath = path
+        self.updateTargetPoint()
+
     def updateTargetPoint(self):
         if len(self.currentPath) == 0:
             return
@@ -89,9 +95,11 @@ class Robot:
         return self.state == state
 
     def updateState(self, state):
+        logging.info(f"State changed from {self.state} to {state}")
         self.state = state
 
     def stopMoving(self):
+        logging.info("Stop moving")
         self.steeringControl.currentVelocity = 0
         data = {
             "type": "control",
@@ -121,15 +129,15 @@ class Robot:
 
     def getRobotState(self) -> dict:
         pos: Pose = self.getPos()
-        cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
-        cornerXY = [point.toDict() for point in cornerXY]
+        # cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
+        # cornerXY = [point.toDict() for point in cornerXY]
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
             "orientation": pos.orientation,
             "velocity": self.steeringControl.getVelocity(),
             "position": pos.point.toDict(),
-            "corners": cornerXY,
+            # "corners": cornerXY,
         }
 
     def getPos(self) -> Pose:
@@ -160,6 +168,16 @@ class Robot:
             globalCorners.append(Point(x, y))
         return globalCorners
     
+    def getCollideObstacle(self) -> list[Point]:
+        cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
+        count = 3 if len(self.currentPath) > 3 else len(self.currentPath)
+        collideCorners = []
+        for i in range(count):
+            for corner in cornerXY:
+                if distance(corner, self.currentPath[i]) < 300: #in mm
+                    collideCorners.append(corner)
+        return collideCorners
+
     def stop(self):
         self.arduino.close()
         self.lidar.stop()
