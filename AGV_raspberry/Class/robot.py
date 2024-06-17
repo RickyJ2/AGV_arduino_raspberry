@@ -9,7 +9,6 @@ from Class.arduino import Arduino
 from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
 from Class.util import distance, findOrientation
-from roboviz import MapVisualizer
 
 def motorModelRightID01(RPM) -> float:
     return np.exp((RPM - 19.52) / 33.90)
@@ -33,7 +32,6 @@ class Robot:
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
         self.lidar: Lidar = Lidar(slam = self.slam)
-        self.viz = MapVisualizer(250, 10, 'SLAM', True)
         if id == 1:
             self.steeringControl: SteeringControl = SteeringControl(motorModelRightID01, motorModelLeftID01, self.width, self.wheelDiameter, self.errorTolerance)
         elif id == 2:
@@ -135,7 +133,7 @@ class Robot:
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
-            "orientation": pos.orientation,
+            "orientation": math.degrees(pos.orientation),
             "velocity": self.steeringControl.getVelocity(),
             "position": pos.point.toDict(),
             # "corners": cornerXY,
@@ -158,15 +156,6 @@ class Robot:
         lst[1] += 5000 + self.startCoordinate.y
         lst[2] = math.radians(orientation)
         return Pose(Point(lst[0], lst[1]), lst[2])
-    
-    def getMap(self) -> bytearray:
-        return self.slam.getMap()
-
-    def displayMap(self):
-        x, y, theta = self.slam.getPos()
-        map = self.getMap()
-        if not self.viz.display(x/1000., y/1000., theta, map):
-            return False
 
     def convertCornersToGlobal(self, corners: list[tuple]) -> list[Point]:
         currentPos: Pose = self.getPos()
