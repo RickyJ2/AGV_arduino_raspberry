@@ -37,10 +37,10 @@ class SteeringControl:
         if rightRPM > self.maxRPM:
             rightRPM = self.maxRPM
         #lower bounding
-        if leftRPM < self.minRPM:
-            leftRPM = self.minRPM
-        if rightRPM < self.minRPM:
-            rightRPM = self.minRPM
+        # if leftRPM < self.minRPM:
+        #     leftRPM = self.minRPM
+        # if rightRPM < self.minRPM:
+        #     rightRPM = self.minRPM
         return leftRPM * timesLeft, rightRPM * timesRight
     
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
