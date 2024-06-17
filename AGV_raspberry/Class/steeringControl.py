@@ -3,9 +3,9 @@ from Class.lyapunovControl import LyapunovControl
 from Class.pose import Pose
 
 class SteeringControl:
-    def __init__(self, rightMotorModel: function, leftMotorModel: function, width, wheelDiameter, errorTolerance):
-        self.rightMotorModel: function  = rightMotorModel
-        self.leftMotorModel: function = leftMotorModel
+    def __init__(self, rightMotorModel, leftMotorModel, width, wheelDiameter, errorTolerance):
+        self.rightMotorModel  = rightMotorModel
+        self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
         self.lyapunovControl: LyapunovControl = LyapunovControl(1, 8, 3, errorTolerance)

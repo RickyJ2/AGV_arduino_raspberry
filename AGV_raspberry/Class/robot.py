@@ -9,7 +9,6 @@ from Class.arduino import Arduino
 from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
 from Class.util import distance, findOrientation
-from main import FOLLOW_PATH
 
 def motorModelRightID01(RPM) -> float:
     return np.exp((RPM - 19.52) / 33.90)
