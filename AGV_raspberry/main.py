@@ -137,6 +137,8 @@ if __name__ == "__main__":
     logging.info("Program Start")
     try:
         agv.init()
+        while agv.displayMap():
+            pass
         runMainThread = True
         mainThread = threading.Thread(target=main, name="Main", daemon=True)
         mainThread.start()
