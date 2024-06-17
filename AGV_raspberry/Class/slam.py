@@ -2,7 +2,7 @@ from breezyslam.algorithms import RMHC_SLAM
 from breezyslam.sensors import RPLidarA1 as LaserModel
 
 class SLAM:
-    def __init__(self, mapSizePixels = 250, mapSizeMeters = 10):
+    def __init__(self, mapSizePixels = 500, mapSizeMeters = 10):
         #configuration
         self.mapSizePixels = mapSizePixels
         self.mapSizeMeters = mapSizeMeters

@@ -1,5 +1,6 @@
 import logging
 import json
+import math
 import threading
 from time import sleep
 from tornado import httpclient
@@ -67,6 +68,8 @@ def sendNotifCollided(listObs: list[Point]):
 def main():
     global runMainThread
     while True:
+        pos = agv.getPos()
+        logging.info(f"({pos.point}, {math.degrees(pos.orientation)})")
         if not runMainThread:
             break
         try:
@@ -79,12 +82,12 @@ def main():
                 agv.updateState(FOLLOW_PATH)
                 agv.updateNewGoal()
             elif agv.stateIs(FOLLOW_PATH):
-                listObs = agv.getCollideObstacle()
-                if len(listObs) > 0:
-                    sendNotifCollided(listObs)
-                    agv.stopMoving()
-                    agv.updateState(OBSTACLE_AVOIDANCE)
-                    continue
+                # listObs = agv.getCollideObstacle()
+                # if len(listObs) > 0:
+                #     sendNotifCollided(listObs)
+                #     agv.stopMoving()
+                #     agv.updateState(OBSTACLE_AVOIDANCE)
+                #     continue
                 if agv.isReachTargetPoint():
                     agv.stopMoving()
                     agv.updateTargetPoint()

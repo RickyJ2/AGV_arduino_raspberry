@@ -27,7 +27,7 @@ class Robot:
         self.id = id
         self.width = 189 #mm
         self.wheelDiameter = 60 #mm
-        self.errorTolerance = 175
+        self.errorTolerance = 100
 
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
