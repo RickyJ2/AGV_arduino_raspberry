@@ -15,6 +15,7 @@ class Lidar:
         self.min_distance = 50
         self.scan: list[tuple] = []
         self.corners: list[tuple] = []
+        self.lines: list[list[tuple]] = []
     
     def checkHealth(self) -> bool:
         if self.lidar.health[1] == 0: 
@@ -71,7 +72,7 @@ class Lidar:
                     if not self.runThread:
                         break
                     self.scan = scan
-                    self.corners = self.findCorners(scan)
+                    # self.findCorners(scan)
                     items = [item for item in scan]
                     distances = [item[2] for item in items]
                     angles = [item[1] for item in items]
@@ -103,7 +104,7 @@ class Lidar:
                     cornerList.append(scan[i - 1])
                 else:
                     cornerList.append(scan[i])
-        return cornerList
+        self.corners = cornerList
 
     def stop(self):
         try:
