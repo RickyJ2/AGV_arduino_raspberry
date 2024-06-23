@@ -1,6 +1,5 @@
 import logging
 import json
-import math
 import threading
 from time import sleep
 from tornado import httpclient
