@@ -63,13 +63,6 @@ def sendNotifCollided(listObs: list[Point]):
     }
     ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
 
-def sendObs(listObs: list[Point]):
-    msg = {
-        "type": "obstacle",
-        "data": [point.toDict() for point in listObs]
-    }
-    ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
-
 def main():
     global runMainThread
     while True:
