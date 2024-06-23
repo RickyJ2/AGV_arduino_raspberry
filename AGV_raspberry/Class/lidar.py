@@ -13,7 +13,9 @@ class Lidar:
         #in mm
         self.max_distance = 12000
         self.min_distance = 50
+        self.scan: list[tuple] = []
         self.corners: list[tuple] = []
+        self.lines: list[list[tuple]] = []
     
     def checkHealth(self) -> bool:
         if self.lidar.health[1] == 0: 
@@ -69,7 +71,8 @@ class Lidar:
                 for scan in self._iter_scans():
                     if not self.runThread:
                         break
-                    self.corners = self.findCorners(scan)
+                    self.scan = scan
+                    # self.findCorners(scan)
                     items = [item for item in scan]
                     distances = [item[2] for item in items]
                     angles = [item[1] for item in items]
@@ -79,15 +82,15 @@ class Lidar:
                 logging.error(f"Lidar error: {e}")
                 self.lidar.reset()
                 sleep(5)
-    
+
     def findCorners(self, scan) -> list[tuple]:
         diffList = []
         sumDiff = 0
         for i in range(1, len(scan)):
             diffList.append(scan[i][2] - scan[i-1][2])
-            sumDiff += diffList[-1]
+            sumDiff += abs(diffList[-1])
         diffList.append(scan[0][2] - scan[-1][2])
-        sumDiff += diffList[-1]
+        sumDiff += abs(diffList[-1])
         avgDiff = sumDiff / len(diffList)
         cornerList = []
         if abs(diffList[0]) > avgDiff:
@@ -101,7 +104,7 @@ class Lidar:
                     cornerList.append(scan[i - 1])
                 else:
                     cornerList.append(scan[i])
-        return cornerList
+        self.corners = cornerList
 
     def stop(self):
         try:

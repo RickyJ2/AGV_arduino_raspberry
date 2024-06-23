@@ -70,7 +70,7 @@ class Arduino:
 
     def send(self, message):
         try:
-            logging.info(f"Arduino send: {message}")
+            # logging.info(f"Arduino send: {message}")
             self.ser.write(bytes(message, 'utf-8'))
             self.ser.write(bytes('\n', 'utf-8')) #endline
         except Exception as e:

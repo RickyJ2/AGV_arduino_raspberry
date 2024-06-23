@@ -9,7 +9,6 @@ from Class.arduino import Arduino
 from Class.lidar import Lidar
 from Class.steeringControl import SteeringControl
 from Class.util import distance, findOrientation
-from roboviz import MapVisualizer
 
 def motorModelRightID01(RPM) -> float:
     return np.exp((RPM - 19.52) / 33.90)
@@ -28,12 +27,11 @@ class Robot:
         self.id = id
         self.width = 189 #mm
         self.wheelDiameter = 60 #mm
-        self.errorTolerance = 175
+        self.errorTolerance = 100
 
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
         self.lidar: Lidar = Lidar(slam = self.slam)
-        self.viz = MapVisualizer(250, 10, 'SLAM', True)
         if id == 1:
             self.steeringControl: SteeringControl = SteeringControl(motorModelRightID01, motorModelLeftID01, self.width, self.wheelDiameter, self.errorTolerance)
         elif id == 2:
@@ -75,6 +73,7 @@ class Robot:
             self.currentTargetPose.orientation = 90
         else:
             self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
+        logging.info(f"current Target point: {self.currentTargetPose.point.toDict()}")
 
     def isReachGoal(self) -> bool:
         currentPos: Pose = self.getPos()
@@ -130,15 +129,12 @@ class Robot:
 
     def getRobotState(self) -> dict:
         pos: Pose = self.getPos()
-        # cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
-        # cornerXY = [point.toDict() for point in cornerXY]
         return {
             "container": self.arduino.getContainer(),
             "power": self.arduino.getPower(),
-            "orientation": pos.orientation,
+            "orientation": math.degrees(pos.orientation),
             "velocity": self.steeringControl.getVelocity(),
             "position": pos.point.toDict(),
-            # "corners": cornerXY,
         }
 
     def getPos(self) -> Pose:
@@ -158,33 +154,26 @@ class Robot:
         lst[1] += 5000 + self.startCoordinate.y
         lst[2] = math.radians(orientation)
         return Pose(Point(lst[0], lst[1]), lst[2])
-    
-    def getMap(self) -> bytearray:
-        return self.slam.getMap()
 
-    def displayMap(self):
-        x, y, theta = self.slam.getPos()
-        map = self.getMap()
-        if not self.viz.display(x/1000., y/1000., theta, map):
-            return False
-
-    def convertCornersToGlobal(self, corners: list[tuple]) -> list[Point]:
+    def convertCornersToGlobal(self, corners: list[tuple], threshold = 700) -> list[Point]:
         currentPos: Pose = self.getPos()
         globalCorners: list[Point] = []
-        for corner in corners:
-            angleRad = math.radians(corner[1]) + currentPos.orientation
-            x = corner[2] * math.cos(angleRad) + currentPos.point.x
-            y = corner[2] * math.sin(angleRad) + currentPos.point.y
+        for _, angle, distance in corners:
+            if distance > threshold:
+                continue
+            angleRad = math.radians(angle) + currentPos.orientation - 90
+            x = distance * math.cos(angleRad) + currentPos.point.x
+            y = distance * math.sin(angleRad) + currentPos.point.y
             globalCorners.append(Point(x, y))
         return globalCorners
     
     def getCollideObstacle(self) -> list[Point]:
-        cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.corners)
+        cornerXY: list[Point] = self.convertCornersToGlobal(self.lidar.scan)
         count = 3 if len(self.currentPath) > 3 else len(self.currentPath)
         collideCorners = []
-        for i in range(count):
+        for i in range(0, count):
             for corner in cornerXY:
-                if distance(corner, self.currentPath[i]) < 300: #in mm
+                if distance(corner, self.currentPath[i]) < 170 : #in mm
                     collideCorners.append(corner)
         return collideCorners
 
