@@ -24,3 +24,6 @@ python setup.py install
 #pip version 24.0 python 3.11
 
 Change server IP and AGV ID on config.py file
+
+//run this command to ignore update of config.py and rerun this cmd to retrack the changes
+git update-index --no-assume-unchanged config.py
