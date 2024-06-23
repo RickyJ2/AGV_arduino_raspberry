@@ -9,7 +9,6 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from Class.robot import Robot
 from config import ID, IP, PORT
 from Class.point import Point, dictToPoint
-import pygame
 
 #CONSTANTS
 IDLE = 0
@@ -75,8 +74,6 @@ def sendObs(listObs: list[Point]):
 def main():
     global runMainThread
     while True:
-        # pos = agv.getPos()
-        # logging.info(f"({pos.point}, {math.degrees(pos.orientation)})")
         if not runMainThread:
             break
         try:
@@ -147,46 +144,12 @@ def configLogger():
     logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
 
-def displayLidarReading():
-    pygame.init()
-    screen = pygame.display.set_mode([600, 600])
-    display = True
-    while display:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                display = False
-        screen.fill((20, 10, 30))
-        for _, angle, distance in agv.lidar.scan:
-            distance /= 10
-            x = 300 + distance * math.sin(math.radians(angle))
-            y = 300 + distance * math.cos(math.radians(angle))
-            pygame.draw.circle(screen, pygame.Color(255, 0, 0), (x, y), 1)
-        # listObs = agv.getCollideObstacle()
-        # for point in listObs:
-        #     pygame.draw.circle(screen, pygame.Color(0, 255, 0), (300 + point.x/10, 300 + point.y/10), 5)
-        for _, angle, distance in agv.lidar.corners:
-            distance /= 10
-            x = 300 + distance * math.sin(math.radians(angle))
-            y = 300 + distance * math.cos(math.radians(angle))
-            pygame.draw.circle(screen, pygame.Color(0, 255, 0), (x, y), 5)
-        for point, point2 in agv.lidar.lines:
-            d1 = point[2] / 10
-            d2 = point2[2] / 10
-            x1 = 300 + d1 * math.sin(math.radians(point[1]))
-            y1 = 300 + d1 * math.cos(math.radians(point[1]))
-            x2 = 300 + d2 * math.sin(math.radians(point2[1]))
-            y2 = 300 + d2 * math.cos(math.radians(point2[1]))
-            pygame.draw.line(screen, pygame.Color(0, 255, 0), (x1, y1), (x2, y2), 1)
-        pygame.draw.circle(screen, pygame.Color(100, 100, 120), (300, 300), 5)
-        pygame.display.flip()
-
 if __name__ == "__main__":
     configLogger()
     logging.info("Program Start")
     try:
         agv.init()
         sleep(5)
-        # displayLidarReading()
         runMainThread = True
         mainThread = threading.Thread(target=main, name="Main", daemon=True)
         mainThread.start()

@@ -24,10 +24,5 @@ class SLAM:
         elif self.previousDistances is not None:
             self.slam.update(self.previousDistances, scan_angles_degrees=self.previousAngles)
 
-    def getMap(self) -> bytearray:
-        self.slam.getmap(self.mapbytes)
-        print(self.mapbytes)
-        # return self.mapbytes
-
     def getPos(self) -> tuple[float, float, float]:
         return self.slam.getpos() ## x_mm, y_mm, theta
