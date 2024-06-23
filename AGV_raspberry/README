@@ -22,3 +22,5 @@ cd PyRoboViz
 python setup.py install
 
 #pip version 24.0 python 3.11
+
+Change server IP and AGV ID on config.py file

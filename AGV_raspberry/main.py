@@ -13,7 +13,6 @@ from Class.point import Point, dictToPoint
 IDLE = 0
 FOLLOW_PATH = 1
 OBSTACLE_AVOIDANCE = 2
-GO_TO_NEAREST_POINT = 3
 
 header = {
     'id': f'{ID}'
@@ -98,8 +97,6 @@ def main():
                 else:
                     agv.steerToTargetPoint()
             elif agv.stateIs(OBSTACLE_AVOIDANCE):
-                pass
-            elif agv.stateIs(GO_TO_NEAREST_POINT):
                 pass
         except Exception as e:
             logging.error(f"Main Error: {e}")
