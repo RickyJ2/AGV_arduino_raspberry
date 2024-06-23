@@ -12,7 +12,7 @@ from Class.point import Point, dictToPoint
 #CONSTANTS
 IDLE = 0
 FOLLOW_PATH = 1
-OBSTACLE_AVOIDANCE = 2
+WAIT_PATH = 2
 
 header = {
     'id': f'{ID}'
@@ -92,7 +92,7 @@ def main():
                         if len(listObs) > 0:
                             sendNotifCollided(listObs)
                             agv.stopMoving()
-                            agv.updateState(OBSTACLE_AVOIDANCE)
+                            agv.updateState(WAIT_PATH)
                             continue    
                     agv.updateTargetPoint()
                     sendNotifReachPoint() 
@@ -105,12 +105,12 @@ def main():
                     if len(listObs) > 0:
                         sendNotifCollided(listObs)
                         agv.stopMoving()
-                        agv.updateState(OBSTACLE_AVOIDANCE)
+                        agv.updateState(WAIT_PATH)
                         continue
                     agv.updateTargetPoint()
                 else:
                     agv.steerToTargetPoint()
-            elif agv.stateIs(OBSTACLE_AVOIDANCE):
+            elif agv.stateIs(WAIT_PATH):
                 pass
         except Exception as e:
             logging.error(f"Main Error: {e}")
