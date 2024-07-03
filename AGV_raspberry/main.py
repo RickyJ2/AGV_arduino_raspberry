@@ -2,6 +2,7 @@ import logging
 import json
 import threading
 from time import sleep
+import time
 from tornado import httpclient
 from Class.client import Client
 from tornado.ioloop import IOLoop, PeriodicCallback
@@ -65,10 +66,14 @@ def sendNotifCollided(listObs: list[Point]):
 
 def main():
     global runMainThread
+    previousTime = time.time()
     while True:
         if not runMainThread:
             break
         try:
+            # pos = agv.getPos()
+            # logging.info(f"{pos.point}, {pos.orientation}")
+            # sleep(1)
             if agv.stateIs(IDLE):
                 if agv.noGoal():
                     if agv.steeringControl.currentVelocity != 0:
@@ -80,13 +85,13 @@ def main():
             elif agv.stateIs(FOLLOW_PATH):
                 if agv.isReachTargetPoint():
                     agv.stopMoving()
-                    if not agv.isCurrentPathEmpty():
-                        listObs = agv.getCollideObstacle()
-                        if len(listObs) > 0:
-                            sendNotifCollided(listObs)
-                            agv.stopMoving()
-                            agv.updateState(WAIT_PATH)
-                            continue    
+                    # if not agv.isCurrentPathEmpty():
+                    #     listObs = agv.getCollideObstacle()
+                    #     if len(listObs) > 0:
+                    #         sendNotifCollided(listObs)
+                    #         agv.stopMoving()
+                    #         agv.updateState(WAIT_PATH)
+                    #         continue    
                     agv.updateTargetPoint()
                     sendNotifReachPoint() 
                     if agv.isReachGoal():
@@ -94,14 +99,15 @@ def main():
                         agv.updateState(IDLE)
                         continue
                 elif agv.isCurrentTargetPointNone():  
-                    listObs = agv.getCollideObstacle()
-                    if len(listObs) > 0:
-                        sendNotifCollided(listObs)
-                        agv.stopMoving()
-                        agv.updateState(WAIT_PATH)
-                        continue
+                    # listObs = agv.getCollideObstacle()
+                    # if len(listObs) > 0:
+                    #     sendNotifCollided(listObs)
+                    #     agv.stopMoving()
+                    #     agv.updateState(WAIT_PATH)
+                    #     continue
                     agv.updateTargetPoint()
-                else:
+                elif (time.time() - previousTime)*1000 > 10:
+                    previousTime = time.time()
                     agv.steerToTargetPoint()
             elif agv.stateIs(WAIT_PATH):
                 pass
