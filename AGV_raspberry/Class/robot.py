@@ -27,7 +27,7 @@ class Robot:
         self.id = id
         self.width = 189 #mm
         self.wheelDiameter = 60 #mm
-        self.errorTolerance = 100
+        self.errorTolerance = 60
 
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
@@ -69,10 +69,11 @@ class Robot:
         if len(self.currentPath) == 0:
             return
         self.currentTargetPose = Pose(self.currentPath.pop(0), 0)
-        if len(self.currentPath) == 0:
-            self.currentTargetPose.orientation = 90
-        else:
-            self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
+        self.currentTargetPose.orientation = findOrientation(self.getPos(), self.currentTargetPose)
+        # if len(self.currentPath) == 0:
+        #     self.currentTargetPose.orientation = 90
+        # else:
+        #     self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
         logging.info(f"current Target point: {self.currentTargetPose.point.toDict()}")
 
     def isReachGoal(self) -> bool:
@@ -173,7 +174,7 @@ class Robot:
         collideCorners = []
         for i in range(0, count):
             for corner in cornerXY:
-                if distance(corner, self.currentPath[i]) < 170 : #in mm
+                if distance(corner, self.currentPath[i]) < 175 : #in mm
                     collideCorners.append(corner)
         return collideCorners
 

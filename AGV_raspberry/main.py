@@ -85,26 +85,28 @@ def main():
             elif agv.stateIs(FOLLOW_PATH):
                 if agv.isReachTargetPoint():
                     agv.stopMoving()
-                    # if not agv.isCurrentPathEmpty():
-                    #     listObs = agv.getCollideObstacle()
-                    #     if len(listObs) > 0:
-                    #         sendNotifCollided(listObs)
-                    #         agv.stopMoving()
-                    #         agv.updateState(WAIT_PATH)
-                    #         continue    
+                    if not agv.isCurrentPathEmpty():
+                        listObs = agv.getCollideObstacle()
+                        if len(listObs) > 0:
+                            sendNotifCollided(listObs)
+                            agv.stopMoving()
+                            agv.updateState(WAIT_PATH)
+                            continue    
                     agv.updateTargetPoint()
                     sendNotifReachPoint() 
                     if agv.isReachGoal():
+                        pos = agv.getPos()
+                        logging.info(f"{pos.point}, {pos.orientation}")
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
                         continue
                 elif agv.isCurrentTargetPointNone():  
-                    # listObs = agv.getCollideObstacle()
-                    # if len(listObs) > 0:
-                    #     sendNotifCollided(listObs)
-                    #     agv.stopMoving()
-                    #     agv.updateState(WAIT_PATH)
-                    #     continue
+                    listObs = agv.getCollideObstacle()
+                    if len(listObs) > 0:
+                        sendNotifCollided(listObs)
+                        agv.stopMoving()
+                        agv.updateState(WAIT_PATH)
+                        continue
                     agv.updateTargetPoint()
                 elif (time.time() - previousTime)*1000 > 10:
                     previousTime = time.time()
