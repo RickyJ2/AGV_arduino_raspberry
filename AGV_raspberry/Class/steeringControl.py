@@ -8,9 +8,10 @@ class SteeringControl:
         self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        self.lyapunovControl: LyapunovControl = LyapunovControl(3.5, 1, 1, errorTolerance)
+        # 1 0.6 0.4
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, 0.4, errorTolerance)
         self.maxRPM = 90
-        self.minRPM = 65
+        self.minRPM = 60
         self.currentVelocity = 0
     
     def saturated(self, leftRPM, rightRPM) -> tuple[float, float]:
@@ -37,12 +38,6 @@ class SteeringControl:
         if rightRPM > self.maxRPM:
             rightRPM = self.maxRPM
         #lower bounding
-        # if math.floor(leftRPM) == 0 and math.floor(rightRPM) != 0:
-        #     leftRPM = 10
-        #     timesLeft *= -1
-        # if math.floor(rightRPM) == 0 and math.floor(leftRPM) != 0:
-        #     rightRPM = 10
-        #     timesRight *= -1
         if leftRPM < self.minRPM:
             leftRPM = self.minRPM
         if rightRPM < self.minRPM:

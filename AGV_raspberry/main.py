@@ -108,7 +108,7 @@ def main():
                         agv.updateState(WAIT_PATH)
                         continue
                     agv.updateTargetPoint()
-                elif (time.time() - previousTime)*1000 > 10:
+                elif (time.time() - previousTime)*1000 > 90:
                     previousTime = time.time()
                     agv.steerToTargetPoint()
             elif agv.stateIs(WAIT_PATH):
