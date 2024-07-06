@@ -32,6 +32,7 @@ void loop() {
     }else{
       data["data"]["power"] = batteryMotor.getState();
     }
+    data["data"]["power"] = batteryMotor.getState();
     serializeJson(data, Serial);
     Serial.println();
     previousMainMillis = currentMillis;

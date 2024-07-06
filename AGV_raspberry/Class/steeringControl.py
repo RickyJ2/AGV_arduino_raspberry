@@ -8,7 +8,8 @@ class SteeringControl:
         self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 8, 3, errorTolerance)
+        # 1 0.6 0.4
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, 0.4, errorTolerance)
         self.maxRPM = 90
         self.minRPM = 60
         self.currentVelocity = 0
@@ -54,9 +55,17 @@ class SteeringControl:
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         R = vR * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         L, R = self.saturated(L, R)
+        timesL = 1
+        timesR = 1
+        if L < 0:
+            timesL = -1
+            L *= -1
+        if R < 0:
+            timesR = -1
+            R *= -1
         LVolt = self.leftMotorModel(L)
         RVolt = self.rightMotorModel(R)
-        return LVolt, RVolt
+        return LVolt * timesL, RVolt * timesR
 
     def getVelocity(self) -> float:
         return self.currentVelocity
