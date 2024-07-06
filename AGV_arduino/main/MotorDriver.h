@@ -25,22 +25,6 @@ class MotorDriver{
       left.move(leftPWM);
       right.move(rightPWM);
     }
-    void forward(){
-      left.forward();
-      right.forward();
-    }
-    void backward(){
-      left.backward();
-      right.backward();
-    }
-    void turnLeft(){
-      left.backward();
-      right.forward();
-    }
-    void turnRight(){
-      left.forward();
-      right.backward();
-    }
     void stop(){
       left.stop();
       right.stop();
