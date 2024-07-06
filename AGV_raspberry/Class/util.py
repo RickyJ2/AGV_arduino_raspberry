@@ -15,4 +15,7 @@ def findOrientation(pos: Union[Point, Pose], target:Union[Point, Pose]) -> float
         pos = pos.point
     if isinstance(target, Pose):
         target = target.point
-    return math.degrees(math.atan2(target.y - pos.y, target.x - pos.x))
+    orientation = math.degrees(math.atan2(target.y - pos.y, target.x - pos.x))
+    if orientation < 0:
+        orientation = 360 + orientation
+    return orientation
