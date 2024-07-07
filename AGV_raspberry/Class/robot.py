@@ -27,7 +27,7 @@ class Robot:
         self.id = id
         self.width = 189 #mm
         self.wheelDiameter = 60 #mm
-        self.errorTolerance = 60
+        self.errorTolerance = 100
 
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
@@ -70,8 +70,8 @@ class Robot:
             return
         orientation = 0
         if self.currentTargetPose is None:
-            orientation = findOrientation(self.currentPath[0], self.changeCurrentPath[1])
-            self.currentPath[0].pop(0) #remove the starting point
+            orientation = findOrientation(self.currentPath[0], self.currentPath[1])
+            self.currentPath.pop(0) #remove the starting point
         else:
             orientation = findOrientation(self.currentTargetPose, self.currentPath[0])
         self.currentTargetPose = Pose(self.currentPath.pop(0), 0)

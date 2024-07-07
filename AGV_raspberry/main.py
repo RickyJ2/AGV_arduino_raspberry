@@ -72,7 +72,7 @@ def main():
             break
         try:
             # pos = agv.getPos()
-            # logging.info(f"{pos.point}, {pos.orientation}")
+            # logging.info(pos)
             # sleep(1)
             if agv.stateIs(IDLE):
                 if agv.noGoal():
@@ -108,7 +108,7 @@ def main():
                         agv.updateState(WAIT_PATH)
                         continue
                     agv.updateTargetPoint()
-                elif (time.time() - previousTime)*1000 > 90:
+                elif (time.time() - previousTime)*1000 > 50:
                     previousTime = time.time()
                     agv.steerToTargetPoint()
             elif agv.stateIs(WAIT_PATH):

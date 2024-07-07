@@ -1,6 +1,8 @@
+import logging
 import math
 from Class.lyapunovControl import LyapunovControl
 from Class.pose import Pose
+from Class.util import distance
 
 class SteeringControl:
     def __init__(self, rightMotorModel, leftMotorModel, width, wheelDiameter, errorTolerance):
@@ -8,10 +10,10 @@ class SteeringControl:
         self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, errorTolerance)
-        self.maxRPM = 90
-        self.maxRotateRPM = 70
-        self.minRPM = 60
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.4, errorTolerance)
+        self.maxRPM = [65, 70, 90]
+        self.rotateRPM = 70
+        self.minRPM = 65
         self.currentVelocity = 0
     
     def saturated(self, leftRPM, rightRPM, max) -> tuple[float, float]:
@@ -46,7 +48,7 @@ class SteeringControl:
     
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
-        if math.floor(v) == 0  and math.floor(omega) == 0:
+        if math.floor(v) == 0  and math.floor(math.degrees(omega)) == 0:
             self.currentVelocity = 0
             return 0,0
         self.currentVelocity = v
@@ -55,9 +57,14 @@ class SteeringControl:
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         R = vR * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         if v == 0:
-            L, R = self.saturated(L, R, self.maxRotateRPM)
+            L, R = self.saturated(L, R, self.rotateRPM)
         else:
-            L, R = self.saturated(L, R, self.maxRPM)
+            d = distance(currentPoint, targetPoint)
+            for i in range(0, len(self.maxRPM) - 1):
+                if d < (i + 2) * self.lyapunovControl.tolerance:
+                    L, R = self.saturated(L, R, self.maxRPM[i])
+                    break
+            L, R = self.saturated(L, R, self.maxRPM[-1])
         timesL = 1
         timesR = 1
         if L < 0:

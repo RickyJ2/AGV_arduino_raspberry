@@ -1,3 +1,4 @@
+import math
 from Class.point import Point, dictToPoint
 
 class Pose:
@@ -9,4 +10,4 @@ class Pose:
     def __sub__(self, other):
         return Pose(self.point - other.point, self.orientation - other.orientation)
     def __str__(self):
-        return f"Point: {self.point}, Orientation: {self.orientation}"
+        return f"Point: {self.point}, Orientation: {math.degrees(self.orientation)}"
