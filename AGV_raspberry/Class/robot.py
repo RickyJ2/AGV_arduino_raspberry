@@ -70,15 +70,12 @@ class Robot:
             return
         orientation = 0
         if self.currentTargetPose is None:
-            orientation = findOrientation(self.getPos(), self.currentPath[0])
+            orientation = findOrientation(self.currentPath[0], self.changeCurrentPath[1])
+            self.currentPath[0].pop(0) #remove the starting point
         else:
             orientation = findOrientation(self.currentTargetPose, self.currentPath[0])
         self.currentTargetPose = Pose(self.currentPath.pop(0), 0)
         self.currentTargetPose.orientation = orientation
-        # if len(self.currentPath) == 0:
-        #     self.currentTargetPose.orientation = 90
-        # else:
-        #     self.currentTargetPose.orientation = findOrientation(self.currentPath[0], self.currentTargetPose)
         logging.info(f"current Target point: {self.currentTargetPose}")
 
     def isReachGoal(self) -> bool:
