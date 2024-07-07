@@ -10,13 +10,14 @@ class SteeringControl:
         self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.4, errorTolerance)
-        self.maxRPM = [65, 70, 90]
-        self.rotateRPM = 70
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, errorTolerance)
+        self.maxRPM = [70, 80]
         self.minRPM = 65
+        self.maxRotateRPM = 80
+        self.minRotatedRPM = 75
         self.currentVelocity = 0
     
-    def saturated(self, leftRPM, rightRPM, max) -> tuple[float, float]:
+    def saturated(self, leftRPM, rightRPM, min, max) -> tuple[float, float]:
         if math.floor(leftRPM) == 0 and math.floor(rightRPM) == 0:
             return 0,0
         timesLeft = 1
@@ -40,31 +41,30 @@ class SteeringControl:
         if rightRPM > max:
             rightRPM = max
         #lower bounding
-        if leftRPM < self.minRPM:
-            leftRPM = self.minRPM
-        if rightRPM < self.minRPM:
-            rightRPM = self.minRPM
+        if leftRPM < min:
+            leftRPM = min
+        if rightRPM < min:
+            rightRPM = min
         return leftRPM * timesLeft, rightRPM * timesRight
     
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
-        if math.floor(v) == 0  and math.floor(math.degrees(omega)) == 0:
-            self.currentVelocity = 0
-            return 0,0
+        # if math.floor(v) == 0  and math.floor(math.degrees(omega)) == 0:
+        #     self.currentVelocity = 0
+        #     return 0,0
         self.currentVelocity = v
         vL = v - omega*self.width/2 #Linear Velocity mm/s
         vR = v + omega*self.width/2 #Linear Velocity mm/s
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         R = vR * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         if v == 0:
-            L, R = self.saturated(L, R, self.rotateRPM)
+            L, R = self.saturated(L, R, self.minRotatedRPM, self.maxRotateRPM)
         else:
             d = distance(currentPoint, targetPoint)
-            for i in range(0, len(self.maxRPM) - 1):
-                if d < (i + 2) * self.lyapunovControl.tolerance:
-                    L, R = self.saturated(L, R, self.maxRPM[i])
-                    break
-            L, R = self.saturated(L, R, self.maxRPM[-1])
+            if d < 3 * self.lyapunovControl.tolerance:
+                L, R = self.saturated(L, R, self.minRPM, self.maxRPM[0])
+            else:
+                L, R = self.saturated(L, R, self.minRPM, self.maxRPM[-1])
         timesL = 1
         timesR = 1
         if L < 0:

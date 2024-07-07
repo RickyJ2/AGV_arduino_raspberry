@@ -27,7 +27,7 @@ class Robot:
         self.id = id
         self.width = 189 #mm
         self.wheelDiameter = 60 #mm
-        self.errorTolerance = 100
+        self.errorTolerance = 60
 
         self.arduino: Arduino = Arduino()
         self.slam: SLAM = SLAM()
@@ -113,6 +113,7 @@ class Robot:
 
     def steerToTargetPoint(self):
         currentPos = self.getPos()
+        self.currentTargetPose.orientation = findOrientation(currentPos, self.currentTargetPose)
         LVolt, RVolt = self.steeringControl.compute(currentPos, self.currentTargetPose)
         data = {
             "type": "control",

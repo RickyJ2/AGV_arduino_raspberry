@@ -10,8 +10,8 @@ class LyapunovControl:
     
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         error = targetPoint - currentPoint
-        if abs(error.point.x) < self.tolerance and abs(error.point.y) < self.tolerance and abs(error.orientation) < 2 * math.pi:
-            return 0, 0
+        # if abs(error.point.x) < self.tolerance and abs(error.point.y) < self.tolerance and abs(error.orientation) < 2 * math.pi:
+        #     return 0, 0
         v = self.k1 * (error.point.x * math.cos(currentPoint.orientation) + error.point.y * math.sin(currentPoint.orientation))
         # logging.debug(error)
         if error.orientation > math.pi:

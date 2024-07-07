@@ -21,7 +21,7 @@ class SLAM:
         self.init()
 
     def init(self):
-        self.slam = RMHC_SLAM(LaserModel(), self.mapSizePixels, self.mapSizeMeters, map_quality=60, hole_width_mm=2700)
+        self.slam = RMHC_SLAM(LaserModel(), self.mapSizePixels, self.mapSizeMeters, map_quality=60, hole_width_mm=1500)
         # self.slam = RMHC_SLAM(LaserModel(), self.mapSizePixels, self.mapSizeMeters)
         self.pose = [0,0,0]
         self.previousDistances = None

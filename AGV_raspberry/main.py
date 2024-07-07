@@ -1,5 +1,6 @@
 import logging
 import json
+import math
 import threading
 from time import sleep
 import time
@@ -96,7 +97,7 @@ def main():
                     sendNotifReachPoint() 
                     if agv.isReachGoal():
                         pos = agv.getPos()
-                        logging.info(f"{pos.point}, {pos.orientation}")
+                        logging.info(f"Current Position: {pos.point}, {math.degrees(pos.orientation)}")
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
                         continue
