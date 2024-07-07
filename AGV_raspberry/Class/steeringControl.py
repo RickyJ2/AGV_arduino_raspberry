@@ -8,13 +8,13 @@ class SteeringControl:
         self.leftMotorModel = leftMotorModel
         self.width = width
         self.wheelDiameter = wheelDiameter
-        # 1 0.6 0.4
-        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, 0.4, errorTolerance)
+        self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, errorTolerance)
         self.maxRPM = 90
+        self.maxRotateRPM = 70
         self.minRPM = 60
         self.currentVelocity = 0
     
-    def saturated(self, leftRPM, rightRPM) -> tuple[float, float]:
+    def saturated(self, leftRPM, rightRPM, max) -> tuple[float, float]:
         if math.floor(leftRPM) == 0 and math.floor(rightRPM) == 0:
             return 0,0
         timesLeft = 1
@@ -26,17 +26,17 @@ class SteeringControl:
             timesRight = -1
             rightRPM *= -1
         #upper bounding
-        if leftRPM > self.maxRPM and rightRPM > self.maxRPM:
+        if leftRPM > max and rightRPM > max:
             if leftRPM > rightRPM:
-                rightRPM *= self.maxRPM / rightRPM
-                leftRPM = self.maxRPM
+                rightRPM *= max / rightRPM
+                leftRPM = max
             else:
-                leftRPM *= self.maxRPM / leftRPM
-                rightRPM = self.maxRPM
-        if leftRPM > self.maxRPM:
-            leftRPM = self.maxRPM
-        if rightRPM > self.maxRPM:
-            rightRPM = self.maxRPM
+                leftRPM *= max / leftRPM
+                rightRPM = max
+        if leftRPM > max:
+            leftRPM = max
+        if rightRPM > max:
+            rightRPM = max
         #lower bounding
         if leftRPM < self.minRPM:
             leftRPM = self.minRPM
@@ -54,7 +54,10 @@ class SteeringControl:
         vR = v + omega*self.width/2 #Linear Velocity mm/s
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
         R = vR * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
-        L, R = self.saturated(L, R)
+        if v == 0:
+            L, R = self.saturated(L, R, self.maxRotateRPM)
+        else:
+            L, R = self.saturated(L, R, self.maxRPM)
         timesL = 1
         timesR = 1
         if L < 0:
