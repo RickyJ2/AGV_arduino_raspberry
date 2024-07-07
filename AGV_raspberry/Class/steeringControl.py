@@ -49,9 +49,6 @@ class SteeringControl:
     
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
-        # if math.floor(v) == 0  and math.floor(math.degrees(omega)) == 0:
-        #     self.currentVelocity = 0
-        #     return 0,0
         self.currentVelocity = v
         vL = v - omega*self.width/2 #Linear Velocity mm/s
         vR = v + omega*self.width/2 #Linear Velocity mm/s

@@ -72,9 +72,6 @@ def main():
         if not runMainThread:
             break
         try:
-            # pos = agv.getPos()
-            # logging.info(pos)
-            # sleep(1)
             if agv.stateIs(IDLE):
                 if agv.noGoal():
                     if agv.steeringControl.currentVelocity != 0:
@@ -96,8 +93,6 @@ def main():
                     agv.updateTargetPoint()
                     sendNotifReachPoint() 
                     if agv.isReachGoal():
-                        pos = agv.getPos()
-                        logging.info(f"Current Position: {pos.point}, {math.degrees(pos.orientation)}")
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
                         continue
