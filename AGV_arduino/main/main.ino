@@ -4,8 +4,6 @@ MotorDriver motor(6,7,8,9,10,11);
 Proximity container(5);
 VoltageReader batteryRaspberry(A2, 7.5, 8.3);
 VoltageReader batteryMotor(A3, 7.2, 8.0);
-
-//AGV State
 unsigned long previousMainMillis = 0;
 
 void setup() {
@@ -15,7 +13,6 @@ void setup() {
   batteryMotor.init();
   Serial.begin(9600);
 }
-
 void loop() {
   //Update all sensor data
   unsigned long currentMillis = millis();

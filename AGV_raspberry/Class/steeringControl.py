@@ -18,8 +18,6 @@ class SteeringControl:
         self.currentVelocity = 0
     
     def saturated(self, leftRPM, rightRPM, min, max) -> tuple[float, float]:
-        if math.floor(leftRPM) == 0 and math.floor(rightRPM) == 0:
-            return 0,0
         timesLeft = 1
         timesRight = 1
         if leftRPM < 0:
