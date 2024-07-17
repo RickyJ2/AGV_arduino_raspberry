@@ -88,6 +88,7 @@ def writeToExcel(data):
 def main():
     global runMainThread
     previousTime = time.time()
+    previousSampleTime = time.time()
     while True:
         if not runMainThread:
             break
@@ -117,7 +118,7 @@ def main():
                     if agv.isReachGoal():
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
-                        continue
+                    continue
                 elif agv.isCurrentTargetPointNone():  
                     listObs = agv.getCollideObstacle()
                     if len(listObs) > 0:
@@ -126,9 +127,12 @@ def main():
                         agv.updateState(WAIT_PATH)
                         continue
                     agv.updateTargetPoint()
+                    continue
                 elif (time.time() - previousTime)*1000 > 50:
                     previousTime = time.time()
                     agv.steerToTargetPoint()
+                if (time.time() - previousSampleTime)*1000 > 100:
+                    previousSampleTime = time.time()
                     agv.insertData(datetime.now().strftime("%H:%M:%S.%f"))
             elif agv.stateIs(WAIT_PATH):
                 pass
