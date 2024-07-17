@@ -1,14 +1,17 @@
 import logging
 import json
-import math
 import threading
 from time import sleep
 import time
+import pandas as pd
+from datetime import datetime
+import uuid
+import os
 from tornado import httpclient
 from Class.client import Client
 from tornado.ioloop import IOLoop, PeriodicCallback
 from Class.robot import Robot
-from config import ID, IP, PORT
+from config import ID, IP, PORT, FILENAME
 from Class.point import Point, dictToPoint
 
 #CONSTANTS
@@ -65,6 +68,23 @@ def sendNotifCollided(listObs: list[Point]):
     }
     ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
 
+def writeToExcel(data):
+    if len(data["time"]) == 0:
+        logging.info("No data to write")
+        return
+    df = pd.DataFrame(data)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    unique_uuid = uuid.uuid4().hex[:6]
+    sheet_name = f"AGV{ID}_{timestamp}_{unique_uuid}"
+    if not os.path.exists(FILENAME):
+        with pd.ExcelWriter(FILENAME, mode='w', engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+        logging.info(f"Data has been written to {FILENAME} sheet {sheet_name}")
+    else:
+        with pd.ExcelWriter(FILENAME, mode='a', engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+        logging.info(f"Data has been written to {FILENAME} sheet {sheet_name}")
+
 def main():
     global runMainThread
     previousTime = time.time()
@@ -91,7 +111,9 @@ def main():
                             agv.updateState(WAIT_PATH)
                             continue    
                     agv.updateTargetPoint()
-                    sendNotifReachPoint() 
+                    sendNotifReachPoint()
+                    writeToExcel(agv.data)
+                    agv.clearData()
                     if agv.isReachGoal():
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
@@ -107,6 +129,7 @@ def main():
                 elif (time.time() - previousTime)*1000 > 50:
                     previousTime = time.time()
                     agv.steerToTargetPoint()
+                    agv.insertData(datetime.now().strftime("%H:%M:%S.%f"))
             elif agv.stateIs(WAIT_PATH):
                 pass
         except Exception as e:
@@ -159,4 +182,5 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"Error: {e}")
         errorHandler()
+    writeToExcel(agv.data)
     logging.info("Program exit")

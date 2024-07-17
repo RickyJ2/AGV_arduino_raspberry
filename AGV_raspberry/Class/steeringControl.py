@@ -1,4 +1,3 @@
-import logging
 import math
 from Class.lyapunovControl import LyapunovControl
 from Class.pose import Pose
@@ -16,6 +15,9 @@ class SteeringControl:
         self.maxRotateRPM = 80
         self.minRotatedRPM = 75
         self.currentVelocity = 0
+        self.currentOmega = 0
+        self.leftSpeed = 0
+        self.rightSpeed = 0
     
     def saturated(self, leftRPM, rightRPM, min, max) -> tuple[float, float]:
         timesLeft = 1
@@ -48,6 +50,7 @@ class SteeringControl:
     def compute(self, currentPoint: Pose, targetPoint: Pose) -> tuple[float, float]:
         v, omega = self.lyapunovControl.compute(currentPoint, targetPoint)
         self.currentVelocity = v
+        self.currentOmega = omega
         vL = v - omega*self.width/2 #Linear Velocity mm/s
         vR = v + omega*self.width/2 #Linear Velocity mm/s
         L = vL * 60 / (math.pi * self.wheelDiameter) #Angular Velocity RPM
@@ -60,6 +63,8 @@ class SteeringControl:
                 L, R = self.saturated(L, R, self.minRPM, self.maxRPM[0])
             else:
                 L, R = self.saturated(L, R, self.minRPM, self.maxRPM[-1])
+        self.leftSpeed = L
+        self.rightSpeed = R
         timesL = 1
         timesR = 1
         if L < 0:
@@ -74,5 +79,8 @@ class SteeringControl:
 
     def getVelocity(self) -> float:
         return self.currentVelocity
+
+    def getOmega(self) -> float:
+        return self.currentOmega
 
     

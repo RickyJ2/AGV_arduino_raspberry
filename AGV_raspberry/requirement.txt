@@ -1,3 +1,5 @@
 Adafruit_CircuitPython_RPLIDAR
 tornado==6.4
 numpy==1.26.4
+pandas
+openpyxl

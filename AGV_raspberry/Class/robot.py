@@ -44,7 +44,44 @@ class Robot:
         self.currentPath: list[Point] = []
         self.currentTargetPose: Pose = None
         self.state = state
+        self.clearData()
     
+    def clearData(self):
+        self.data = {
+            "time": [],
+            "cur_x": [],
+            "cur_y": [],
+            "cur_orien": [],
+            "goal_x": [],
+            "goal_y": [],
+            "goal_orien": [],
+            "power": [],
+            "v_lyapunov": [],
+            "omega_lyapunov": [],
+            "v_left": [],
+            "v_right": [],
+        }
+    
+    def insertData(self, time):
+        currentPos = self.getPos()
+        goal = self.currentTargetPose
+        v = self.steeringControl.getVelocity()
+        omega = self.steeringControl.getOmega()
+        vLeft = self.steeringControl.leftSpeed
+        vRight = self.steeringControl.rightSpeed
+        self.data["time"].append(time)
+        self.data["cur_x"].append(currentPos.point.x)
+        self.data["cur_y"].append(currentPos.point.y)
+        self.data["cur_orien"].append(math.degrees(currentPos.orientation))
+        self.data["goal_x"].append(goal.point.x)
+        self.data["goal_y"].append(goal.point.y)
+        self.data["goal_orien"].append(math.degrees(goal.orientation))
+        self.data["power"].append(round(self.arduino.power))
+        self.data["v_lyapunov"].append(v)
+        self.data["omega_lyapunov"].append(omega)
+        self.data["v_left"].append(vLeft)
+        self.data["v_right"].append(vRight)
+
     def init(self):
         self.arduino.start()
         self.lidar.start()
