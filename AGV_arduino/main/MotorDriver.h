@@ -35,4 +35,7 @@ class MotorDriver{
     int getRightSpeed(){
       return right.getSpeed();
     }
+    bool isStop(){
+      return getLeftSpeed() == 0 && getRightSpeed() == 0;
+    }
 };

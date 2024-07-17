@@ -18,7 +18,9 @@ void loop() {
   unsigned long currentMillis = millis();
   container.updateState(currentMillis/1000);
   batteryRaspberry.updateState();
-  batteryMotor.updateState();
+  if(motor.isStop()){
+    batteryMotor.updateState();
+  }
   //Send to raspberry
   if(currentMillis - previousMainMillis > 500){
     JsonDocument data;
