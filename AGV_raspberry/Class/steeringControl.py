@@ -10,7 +10,7 @@ class SteeringControl:
         self.width = width
         self.wheelDiameter = wheelDiameter
         self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, errorTolerance)
-        self.maxRPM = [70, 80]
+        self.maxRPM = [80, 90]
         self.minRPM = 65
         self.maxRotateRPM = 80
         self.minRotatedRPM = 75
