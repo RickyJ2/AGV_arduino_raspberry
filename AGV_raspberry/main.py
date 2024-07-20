@@ -56,11 +56,11 @@ def sendAGVState():
     client.send(json.dumps(msg))
 
 def sendNotifReachPoint():
-    logging.info("Send Notif")
     msg = {
         "type": "notif",
     }
     ioloop.add_callback(client.send, json.dumps(msg)) #For calling in Thread
+    logging.info("Send Notif")
 
 def sendNotifCollided(listObs: list[Point]):
     msg = {
@@ -117,6 +117,7 @@ def main():
                     writeToExcel(agv.data)
                     agv.clearData()
                     if agv.isReachGoal():
+                        sendNotifReachPoint()
                         agv.clearFollowPathParams()
                         agv.updateState(IDLE)
                     continue

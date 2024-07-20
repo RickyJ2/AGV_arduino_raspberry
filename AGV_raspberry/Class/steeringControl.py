@@ -12,8 +12,8 @@ class SteeringControl:
         self.lyapunovControl: LyapunovControl = LyapunovControl(1, 0.6, errorTolerance)
         self.maxRPM = [80, 90]
         self.minRPM = 65
-        self.maxRotateRPM = 85
-        self.minRotatedRPM = 80
+        self.maxRotateRPM = 90
+        self.minRotatedRPM = 85
         self.currentVelocity = 0
         self.currentOmega = 0
         self.leftSpeed = 0
