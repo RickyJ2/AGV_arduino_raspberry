@@ -56,6 +56,7 @@ def sendAGVState():
     client.send(json.dumps(msg))
 
 def sendNotifReachPoint():
+    logging.info("Send Notif")
     msg = {
         "type": "notif",
     }
